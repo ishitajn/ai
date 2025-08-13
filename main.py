@@ -11,7 +11,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
 
-from api_models import AnalysisRequest, RegenerationRequest, FullApiResponse
+from api_models import AnalysisRequest, RegenerationRequest, FullApiResponse, PromptGenerationResponse
 from db.database import init_db, get_db
 from routers import options_router
 from services import analysis_service, prompt_service
@@ -110,12 +110,12 @@ async def analyze_conversation(request: AnalysisRequest, db: Session = Depends(g
         raise HTTPException(status_code=500, detail=f"Internal Server Error: {e}")
 
 
-@app.post("/api/v1/regenerate", response_model=FullApiResponse)
+@app.post("/api/v1/regenerate", response_model=PromptGenerationResponse)
 async def regenerate_prompts(request: RegenerationRequest, db: Session = Depends(get_db)):
     """
     Regenerates prompts using a previously completed analysis (loaded from DB)
     but with new, user-provided UI settings and overrides. This is a lightweight
-    operation for when the user adjusts a control.
+    operation that returns only the prompt object.
     """
     logger.info(f"Received regeneration request for match: {request.matchId}")
     try:
@@ -133,11 +133,7 @@ async def regenerate_prompts(request: RegenerationRequest, db: Session = Depends
             ui_settings=request.ui_settings
         )
 
-        return FullApiResponse(
-            prompts=prompts,
-            full_analysis=latest_analysis,
-            applied_ui_settings=request.ui_settings  # Return the settings that were just applied
-        )
+        return prompts
     except Exception as e:
         logger.error(f"An error occurred during regeneration for {request.matchId}: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=f"Internal Server Error: {e}")

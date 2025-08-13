@@ -84,6 +84,7 @@ class PromptGenerationResponse(BaseModel):
     model_name: str
     temperature: float
     top_p: float
+    token_count: Optional[int] = None
 
 class FullApiResponse(BaseModel):
     """The main response object for both /analyze and /regenerate."""
