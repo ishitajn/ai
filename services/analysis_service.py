@@ -6,11 +6,6 @@ from typing import List, Dict, Tuple, Optional
 
 from spacy.matcher.dependencymatcher import defaultdict
 from sqlalchemy.orm import Session
-from geopy.geocoders import Nominatim
-from geopy.distance import great_circle
-from geopy.exc import GeocoderTimedOut, GeocoderUnavailable
-from timezonefinder import TimezoneFinder
-import pytz
 
 from api_models import ScrapedData, FullUISettings, InitialUISettings, ScrapedConversationMessage
 from analysis_models import (
@@ -22,10 +17,11 @@ from utils.constants import (
     SEXUAL_WORDS, SEXUAL_EMOJIS, LOW_EFFORT_WORDS, GREETING_KEYWORDS,
     GEO_TRIGGERS, AMBIGUOUS_PHRASES, SARCASTIC_MARKERS, INTENSIFIERS,
     NEGATION_WORDS, INDIRECT_QUESTION_STARTERS, PLANNING_WORDS, POWER_MOVE_PHRASES,
-    COMPLIMENT_WORDS, PROFESSIONAL_WORDS, SHIT_TEST_PATTERNS
+    PROFESSIONAL_WORDS, SHIT_TEST_PATTERNS
 )
 from db import crud
 from config import *
+from services.geo_service import update_geo_context
 
 # --- Initialization ---
 try:
@@ -35,9 +31,6 @@ except OSError:
     from spacy.cli import download
     download(SPACY_MODEL)
     nlp = spacy.load(SPACY_MODEL)
-
-geolocator = Nominatim(user_agent=GEOLOCATOR_USER_AGENT)
-tf = TimezoneFinder()
 
 # --- Main Service Functions ---
 
@@ -54,7 +47,7 @@ def run_full_conversation_analysis(db: Session, match_id: str, scraped_data: Scr
     memory = _update_memory_from_history(user_messages, match_messages, memory)
     
     match_profile_doc = nlp(scraped_data.theirProfile)
-    _update_geo_context(memory, ui_settings.myLocation, scraped_data.theirLocationString, match_profile_doc)
+    update_geo_context(memory, ui_settings.myLocation, scraped_data.theirLocationString, match_profile_doc)
 
     last_match_msg = match_messages[-1] if match_messages else None
     state, pacing = _determine_conversation_state_and_pacing(scraped_data.conversationHistory, last_match_msg)
@@ -243,32 +236,7 @@ def _categorize_topic(topic_text: str, message_doc: spacy.tokens.Doc) -> str:
     if any(w in msg_text_lower for w in VULNERABLE_WORDS): return "vulnerable"
     if any(w in msg_text_lower for w in PROFESSIONAL_WORDS): return "professional"
     if any(token.lemma_ in GEO_TRIGGERS for token in message_doc): return "geo-context"
-    if any(w in msg_text_lower for w in COMPLIMENT_WORDS): return "flirtatious"
     return "general_interest"
-
-def _update_geo_context(memory: MatchMemory, user_location_str: str, match_location_str: Optional[str], match_profile_doc: spacy.tokens.Doc):
-    user_loc, match_loc = None, None
-    try:
-        user_loc = geolocator.geocode(user_location_str, timeout=5)
-        if user_loc: memory.userLocation = user_loc.address
-    except (GeocoderTimedOut, GeocoderUnavailable): pass
-    location_to_geocode = match_location_str or next((ent.text for ent in match_profile_doc.ents if ent.label_ == 'GPE'), None)
-    if location_to_geocode:
-        try:
-            match_loc = geolocator.geocode(location_to_geocode, timeout=5)
-            if match_loc: memory.matchLocation = match_loc.address
-        except (GeocoderTimedOut, GeocoderUnavailable): pass
-    if user_loc and match_loc:
-        distance = great_circle((user_loc.latitude, user_loc.longitude), (match_loc.latitude, match_loc.longitude)).kilometers
-        memory.estimatedDistanceKm = round(distance, 2)
-        memory.isLongDistance = distance > LONG_DISTANCE_THRESHOLD_KM
-        user_tz_str = tf.timezone_at(lng=user_loc.longitude, lat=user_loc.latitude)
-        match_tz_str = tf.timezone_at(lng=match_loc.longitude, lat=match_loc.latitude)
-        if user_tz_str and match_tz_str:
-            now_utc = datetime.datetime.now(pytz.utc)
-            user_offset = now_utc.astimezone(pytz.timezone(user_tz_str)).utcoffset().total_seconds() / 3600
-            match_offset = now_utc.astimezone(pytz.timezone(match_tz_str)).utcoffset().total_seconds() / 3600
-            memory.timeZoneDifferenceHours = int(user_offset - match_offset)
 
 def _determine_strategic_goal(memory: MatchMemory, last_match_msg: Optional[MessageAnalysis], ultimate_goal: str) -> StrategicGoal:
     if memory.investmentScore < DORMANT_INVESTMENT_THRESHOLD: memory.engagementState = "DORMANT"

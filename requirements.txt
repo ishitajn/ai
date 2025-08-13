@@ -5,3 +5,6 @@ geopy
 httpx
 python-dotenv
 pytz
+pytest
+SQLAlchemy
+timezonefinder

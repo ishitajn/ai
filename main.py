@@ -1,5 +1,8 @@
 import logging
 from contextlib import asynccontextmanager
+from dotenv import load_dotenv
+
+load_dotenv()
 
 import uvicorn
 from fastapi import FastAPI, HTTPException, Request, Depends
