@@ -8,7 +8,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
 
-from api_models import AnalysisRequest, RegenerationRequest, FullApiResponse, FrontendAnalysisResponse
+from api_models import AnalysisRequest, FrontendAnalysisResponse
 from db.database import init_db, get_db
 from routers import options_router
 from services import analysis_service
@@ -34,8 +34,8 @@ logger = logging.getLogger(__name__)
 # --- FastAPI App Initialization ---
 app = FastAPI(
     title="Wingman AI Backend - Guru Edition",
-    description="Handles advanced conversation analysis, persistent memory, and dynamic prompt engineering for a stateless UI.",
-    version="8.0.0",
+    description="Handles advanced conversation analysis for a stateless UI.",
+    version="9.0.0",
     lifespan=lifespan
 )
 
@@ -78,42 +78,19 @@ async def analyze_conversation(request: AnalysisRequest, db: Session = Depends(g
             ui_settings=request.ui_settings
         )
 
-        # Map the full analysis to the frontend-specific response model
+        # Map the full internal analysis object to the frontend-specific response model
         return FrontendAnalysisResponse(
             conversationState=analysis.conversationState,
             suppressGreeting=analysis.suppressGreeting,
-            lastMessageAnalysis=analysis.lastMatchMessageAnalysis,
-            memory=analysis.memory
+            lastMessageAnalysis=analysis.lastMessageAnalysis,
+            memory=analysis.memory,
+            dateAnalysis=analysis.dateAnalysis,
+            sexualAnalysis=analysis.sexualAnalysis,
+            responseSuggestions=analysis.responseSuggestions,
+            geoContext=analysis.geoContext
         )
     except Exception as e:
         logger.error(f"An error occurred during analysis for {request.matchId}: {e}", exc_info=True)
-        raise HTTPException(status_code=500, detail=f"Internal Server Error: {e}")
-
-
-@app.post("/api/v1/regenerate", response_model=FrontendAnalysisResponse)
-async def regenerate_analysis(request: RegenerationRequest, db: Session = Depends(get_db)):
-    """
-    Regenerates analysis using a previously completed analysis (loaded from DB)
-    but with new, user-provided UI settings and overrides.
-    """
-    logger.info(f"Received regeneration request for match: {request.matchId}")
-    try:
-        # Load the latest analysis from the database and apply overrides
-        latest_analysis = analysis_service.load_and_apply_overrides(
-            db=db,
-            match_id=request.matchId,
-            ui_settings=request.ui_settings
-        )
-
-        # Map the updated analysis to the frontend-specific response model
-        return FrontendAnalysisResponse(
-            conversationState=latest_analysis.conversationState,
-            suppressGreeting=latest_analysis.suppressGreeting,
-            lastMessageAnalysis=latest_analysis.lastMatchMessageAnalysis,
-            memory=latest_analysis.memory
-        )
-    except Exception as e:
-        logger.error(f"An error occurred during regeneration for {request.matchId}: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=f"Internal Server Error: {e}")
 
 

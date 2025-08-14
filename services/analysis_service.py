@@ -14,17 +14,16 @@ import pytz
 from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
 from transformers import pipeline
 
-from api_models import ScrapedData, FullUISettings, InitialUISettings, ScrapedConversationMessage
+from api_models import ScrapedData, UISettings
 from analysis_models import (
     MessageAnalysis, SubtextAnalysis, QuestionInfo, FullConversationAnalysis, 
-    MatchMemory, TopicDetails, StrategicGoal
+    MatchMemory, TopicDetails, GeoContext, LocationContext
 )
 from utils.constants import (
     POSITIVE_WORDS, NEGATIVE_WORDS, AROUSAL_WORDS, VULNERABLE_WORDS,
     SEXUAL_WORDS, SEXUAL_EMOJIS, LOW_EFFORT_WORDS, GREETING_KEYWORDS,
     GEO_TRIGGERS, AMBIGUOUS_PHRASES, SARCASTIC_MARKERS, INTENSIFIERS,
-    NEGATION_WORDS, INDIRECT_QUESTION_STARTERS, PLANNING_WORDS, POWER_MOVE_PHRASES,
-    COMPLIMENT_WORDS, PROFESSIONAL_WORDS, SHIT_TEST_PATTERNS
+    NEGATION_WORDS, INDIRECT_QUESTION_STARTERS, PLANNING_WORDS
 )
 from db import crud
 from config import *
@@ -47,146 +46,62 @@ try:
 except Exception as e:
     print(f"Failed to load topic classifier model: {e}")
 
-# --- Main Service Functions ---
+# --- Main Service Function ---
 
-def run_full_conversation_analysis(db: Session, match_id: str, scraped_data: ScrapedData, ui_settings: InitialUISettings) -> FullConversationAnalysis:
+def run_full_conversation_analysis(db: Session, match_id: str, scraped_data: ScrapedData, ui_settings: UISettings) -> FullConversationAnalysis:
     """
-    The main entry point for a new analysis request. It orchestrates all sub-modules,
-    builds a complete analysis object from scratch, and saves it to the database.
+    The main entry point for a new analysis request. It orchestrates all sub-modules
+    and builds the complete, final analysis object.
     """
-    analyzed_messages = [analyze_single_message(msg.content, msg.role, ui_settings.useEnhancedNlp) for msg in scraped_data.conversationHistory]
-    user_messages = [m for m in analyzed_messages if m.role == 'user']
-    match_messages = [m for m in analyzed_messages if m.role == 'assistant']
-
-    memory = MatchMemory()
-    memory = _update_memory_from_history(user_messages, match_messages, memory)
+    history = scraped_data.conversationHistory
+    analyzed_messages = [analyze_single_message(msg.content, msg.role, ui_settings.useEnhancedNlp) for msg in history]
     
-    match_profile_doc = nlp(scraped_data.theirProfile)
-    _update_geo_context(memory, ui_settings.myLocation, scraped_data.theirLocationString, match_profile_doc)
+    memory = _update_memory_from_history(history, analyzed_messages)
+    geo_context = _get_geo_context(ui_settings.myLocation, scraped_data.theirLocationString, scraped_data.theirProfile)
 
-    last_match_msg = match_messages[-1] if match_messages else None
-    state, pacing = _determine_conversation_state_and_pacing(scraped_data.conversationHistory, last_match_msg)
+    last_match_msg = next((m for m in reversed(analyzed_messages) if m.role == 'assistant'), None)
+    conversation_state, _ = _determine_conversation_state_and_pacing(history, last_match_msg)
+    suppress_greeting = _has_recent_greeting(history)
     
-    strategic_goal = _determine_strategic_goal(memory, last_match_msg, DEFAULT_ULTIMATE_GOAL)
-
-    # Derive avoided topics list from the final topic scores
     for topic, details in memory.topics.items():
         if details.score < TOPIC_STATUS_AVOID_THRESHOLD:
             memory.avoidedTopics.append(topic)
 
     analysis = FullConversationAnalysis(
-        conversationState=state,
-        conversationPacing=pacing,
-        current_topic=last_match_msg.topics[0] if last_match_msg and last_match_msg.topics else None,
-        lastUserMessageAnalysis=user_messages[-1] if user_messages else None,
-        lastMatchMessageAnalysis=last_match_msg,
-        suppressGreeting=_has_recent_greeting(scraped_data.conversationHistory),
-        strategicGoal=strategic_goal,
+        conversationState=conversation_state,
+        suppressGreeting=suppress_greeting,
+        lastMessageAnalysis=last_match_msg,
         memory=memory,
+        geoContext=geo_context
     )
 
-    crud.save_match_analysis(db, match_id, analysis)
+    # Note: Persisting the new complex object might require schema changes.
+    # crud.save_match_analysis(db, match_id, analysis)
+
     return analysis
 
-def load_and_apply_overrides(db: Session, match_id: str, ui_settings: FullUISettings) -> FullConversationAnalysis:
-    """
-    Loads the latest analysis from the DB and applies user overrides before regeneration.
-    """
-    analysis = crud.get_match_analysis(db, match_id)
-    if not analysis:
-        raise ValueError(f"No analysis found for matchId {match_id}. Please run /analyze first.")
-
-    if ui_settings.investmentScore_override is not None: analysis.memory.investmentScore = ui_settings.investmentScore_override
-    if ui_settings.rapportScore_override is not None: analysis.memory.rapportScore = ui_settings.rapportScore_override
-    if ui_settings.sexualTension_override is not None: analysis.memory.sexualTension = ui_settings.sexualTension_override
-    if ui_settings.isLongDistance_override is not None: analysis.memory.isLongDistance = ui_settings.isLongDistance_override
-    if ui_settings.engagementState_override is not None: analysis.memory.engagementState = ui_settings.engagementState_override
-    if ui_settings.dateArcPhase_override is not None: analysis.memory.dateArcPhase = ui_settings.dateArcPhase_override
-
-    if ui_settings.overrideGoal:
-        analysis.strategicGoal = StrategicGoal(
-            type=ui_settings.overrideGoal,
-            justification="User has manually selected this goal, overriding the AI's initial analysis.",
-            urgency="high"
-        )
-    else:
-        analysis.strategicGoal = _determine_strategic_goal(
-            analysis.memory, analysis.lastMatchMessageAnalysis, ui_settings.ultimateGoal
-        )
-    return analysis
-
-def get_initial_ui_settings(analysis: FullConversationAnalysis, initial_settings: InitialUISettings) -> FullUISettings:
-    """Calculates smart defaults for the UI based on the initial analysis."""
-    defaults = {
-        'flirtyValue': DEFAULT_FLIRTY_VALUE, 'lengthValue': DEFAULT_LENGTH_VALUE,
-        'linguisticStyle': DEFAULT_LINGUISTIC_STYLE, 'humorStyle': DEFAULT_HUMOR_STYLE,
-        'vulnerabilityLevel': DEFAULT_VULNERABILITY_LEVEL, 'endWithQuestion': DEFAULT_END_WITH_QUESTION,
-        'ultimateGoal': DEFAULT_ULTIMATE_GOAL
-    }
-    mem = analysis.memory
-    last_match = analysis.lastMatchMessageAnalysis
-
-    if mem.dateArcPhase == "escalation": defaults['flirtyValue'] = 75
-    if last_match and last_match.subtext.valence < -0.3: defaults['flirtyValue'] = 20
-    if last_match and last_match.questionInfo.isQuestion: defaults['endWithQuestion'] = False
-    if analysis.conversationPacing == "stalled": defaults['endWithQuestion'] = True
-    if last_match and last_match.wordCount < 10: defaults['lengthValue'] = 30
-
-    final_settings = FullUISettings(**initial_settings.model_dump(), **defaults)
-    return final_settings
-
-# --- Helper Functions for Analysis ---
-
-# --- Analysis Pipelines Router ---
+# --- Pipeline Router & Core Message Analysis ---
 
 def analyze_single_message(text: str, role: str, use_enhanced_nlp: bool) -> MessageAnalysis:
-    """
-    Analyzes a single message using either the legacy or enhanced NLP pipeline,
-    based on the user's settings.
-    """
     if not text:
         return MessageAnalysis(content="", role=role, subtext=SubtextAnalysis(), questionInfo=QuestionInfo())
 
     doc = nlp(text)
+    subtext = _analyze_subtext_enhanced(doc) if use_enhanced_nlp else _analyze_subtext_legacy(doc)
 
-    # All pipelines get legacy topics and entities
-    topics, entities = _extract_topics_legacy(doc)
-    enhanced_topics = None
-
-    if use_enhanced_nlp:
-        subtext = _analyze_subtext_enhanced(doc)
-        enhanced_topics = _get_enhanced_topics(doc)
-    else:
-        subtext = _analyze_subtext_legacy(doc)
-
-    # This logic is common to both pipelines
-    question_info = _analyze_question(doc)
-    is_low_effort = _is_low_effort(text, doc)
-    word_count = len([token for token in doc if token.is_alpha])
-    is_geo_related = _detect_geo_related(doc)
-    is_ambiguous = _detect_ambiguity(doc)
-
-    # Create the initial analysis object
     analysis_obj = MessageAnalysis(
         content=text,
         role=role,
         subtext=subtext,
-        questionInfo=question_info,
-        topics=topics,
-        keyEntities=entities,
-        isLowEffort=is_low_effort,
-        wordCount=word_count,
-        enhancedTopics=enhanced_topics,
-        isAmbiguous=is_ambiguous,
-        isGeoRelated=is_geo_related
+        questionInfo=_analyze_question(doc),
+        isLowEffort=_is_low_effort(text, doc),
+        isGeoRelated=_detect_geo_related(doc),
+        wordCount=len([token for token in doc if token.is_alpha])
     )
-
-    # Suggest a response style based on the initial analysis
     analysis_obj.suggestedResponseStyle = _suggest_response_style(analysis_obj)
-
     return analysis_obj
 
-# --- Legacy Pipeline ---
+# --- Sub-analysis Modules & Helper Functions ---
 
 def _analyze_subtext_legacy(doc: spacy.tokens.Doc) -> SubtextAnalysis:
     text_lower = doc.text.lower()
@@ -202,150 +117,91 @@ def _analyze_subtext_legacy(doc: spacy.tokens.Doc) -> SubtextAnalysis:
     if any(w in text_lower for w in PLANNING_WORDS): subtext.intents.append("planning")
     if any(w in text_lower for w in SEXUAL_WORDS) or SEXUAL_EMOJIS.search(text_lower):
         subtext.intents.append("flirting_or_sexual")
-        valence = max(valence, 0.5); arousal += 0.7
     if any(p in text_lower for p in VULNERABLE_WORDS): subtext.isVulnerable = True
-    if any(m in text_lower for m in SARCASTIC_MARKERS) and valence > 0: subtext.isSarcastic = True; valence *= -0.5
+    if any(m in text_lower for m in SARCASTIC_MARKERS) and valence > 0: subtext.isSarcastic = True
     subtext.valence = max(-1, min(1, valence)); subtext.arousal = max(-1, min(1, arousal))
+    subtext.isAmbiguous = any(phrase in text_lower for phrase in AMBIGUOUS_PHRASES)
     subtext.intents = list(set(subtext.intents))
     return subtext
 
-def _extract_topics_legacy(doc: spacy.tokens.Doc) -> Tuple[List[str], Dict[str, List[str]]]:
-    topics = [c.text.lower() for c in doc.noun_chunks if len(c.text.split()) > 1 and not c.root.is_stop]
-    entities = defaultdict(list)
-    for ent in doc.ents: entities[ent.label_].append(ent.text)
-    return list(set(topics)), dict(entities)
-
-# --- Enhanced Pipeline (Placeholders) ---
-
 def _analyze_subtext_enhanced(doc: spacy.tokens.Doc) -> SubtextAnalysis:
-    """
-    Analyzes subtext using VADER for sentiment and then applies other classifiers.
-    """
-    # Start with the legacy analysis to get intents, sarcasm, etc.
     subtext = _analyze_subtext_legacy(doc)
-
-    # --- VADER Sentiment Analysis ---
-    # VADER is better for short, informal text like chats.
     vader_scores = vader_analyzer.polarity_scores(doc.text)
-    # Overwrite the legacy valence score with VADER's compound score.
     subtext.valence = vader_scores['compound']
-    # VADER does not provide an arousal score, so we default it to 0 in the enhanced pipeline.
     subtext.arousal = 0.0
-
-    # --- Enhanced Classifiers ---
-    subtext.communicationStyle = _get_communication_style(doc)
-    subtext.personalityTraits = _get_personality_traits(doc)
-    subtext.humorStyle = _get_humor_style(doc)
-
     return subtext
 
-def _get_humor_style(doc: spacy.tokens.Doc) -> Optional[str]:
-    """
-    Uses a zero-shot classifier to identify the humor style.
-    """
-    if not topic_classifier:
-        return None
+def _update_memory_from_history(history: List[ScrapedConversationMessage], analyzed_messages: List[MessageAnalysis]) -> MatchMemory:
+    memory = MatchMemory()
+    topic_sentiments = defaultdict(list)
 
-    candidate_labels = ["witty", "sarcastic", "self-deprecating", "dry", "dark", "goofy", "pun-based", "no humor"]
+    for i, msg in enumerate(analyzed_messages):
+        if msg.questionInfo.isQuestion:
+            memory.questionHistory.append(msg.content)
+
+        if msg.role == 'assistant' and msg.subtext.valence > 0.8 and any(laugh in msg.content.lower() for laugh in ["lmao", "lol", "haha"]):
+            if i > 0 and history[i-1].role == 'user':
+                memory.insideJokes.append(history[i-1].content)
+
+        doc = nlp(msg.content)
+        topics = [c.text.lower() for c in doc.noun_chunks if len(c.text.split()) > 1 and not c.root.is_stop]
+
+        for topic_text in topics:
+            if topic_text not in memory.topics:
+                memory.topics[topic_text] = TopicDetails()
+            details = memory.topics[topic_text]
+            details.mentions += 1
+            topic_sentiments[topic_text].append(msg.subtext.valence)
+
+    for topic, sentiments in topic_sentiments.items():
+        avg_sentiment = sum(sentiments) / len(sentiments)
+        mention_bonus = min(memory.topics[topic].mentions * 0.05, 0.2)
+        memory.topics[topic].score = max(-1, min(1, avg_sentiment + mention_bonus))
+
+    memory.dateArcPhase = "rapport"
+    return memory
+
+def _get_geo_context(user_location_str: str, match_location_str: Optional[str], match_profile: str) -> GeoContext:
+    geo_context = GeoContext()
+    user_loc, match_loc = None, None
     try:
-        # multi_label=False because we want the single most likely style
-        result = topic_classifier(doc.text, candidate_labels, multi_label=False)
-        # Only return a style if it's not "no humor" and has a decent score
-        if result['labels'][0] != "no humor" and result['scores'][0] > 0.6:
-            return result['labels'][0]
-        return "none"
-    except Exception as e:
-        print(f"Error during humor style classification: {e}")
-        return None
+        user_loc = geolocator.geocode(user_location_str, timeout=5)
+        if user_loc:
+            geo_context.userLocation.lat = user_loc.latitude
+            geo_context.userLocation.lon = user_loc.longitude
+            geo_context.userLocation.timeZone = tf.timezone_at(lng=user_loc.longitude, lat=user_loc.latitude)
+    except (GeocoderTimedOut, GeocoderUnavailable): pass
 
-def _get_personality_traits(doc: spacy.tokens.Doc) -> Optional[Dict[str, float]]:
-    """
-    Uses a zero-shot classifier to get a score for each of the Big Five personality traits.
-    """
-    if not topic_classifier:
-        return None
+    location_to_geocode = match_location_str or next((ent.text for ent in nlp(match_profile).ents if ent.label_ == 'GPE'), None)
+    if location_to_geocode:
+        try:
+            match_loc = geolocator.geocode(location_to_geocode, timeout=5)
+            if match_loc:
+                geo_context.matchLocation.lat = match_loc.latitude
+                geo_context.matchLocation.lon = match_loc.longitude
+                geo_context.matchLocation.timeZone = tf.timezone_at(lng=match_loc.longitude, lat=match_loc.latitude)
+        except (GeocoderTimedOut, GeocoderUnavailable): pass
 
-    trait_labels = {
-        "Openness": "language showing imagination, curiosity, and creativity",
-        "Conscientiousness": "language showing organization, discipline, and responsibility",
-        "Extraversion": "language showing sociability, energy, and assertiveness",
-        "Agreeableness": "language showing compassion, cooperation, and friendliness",
-        "Neuroticism": "language showing sensitivity, anxiety, and negative emotions"
-    }
-
-    try:
-        result = topic_classifier(doc.text, list(trait_labels.values()), multi_label=True)
-
-        # Create a mapping from descriptive label back to the trait name
-        label_to_trait = {v: k for k, v in trait_labels.items()}
-
-        trait_scores = {label_to_trait[label]: score for label, score in zip(result['labels'], result['scores'])}
-        return trait_scores
-    except Exception as e:
-        print(f"Error during personality trait classification: {e}")
-        return None
-
-def _get_communication_style(doc: spacy.tokens.Doc) -> Optional[str]:
-    """
-    Uses a zero-shot classifier to identify communication style.
-    """
-    if not topic_classifier:
-        return None
-
-    candidate_labels = ["Assertive", "Aggressive", "Passive", "Passive-Aggressive"]
-    try:
-        # multi_label=False because we want the single most likely style
-        result = topic_classifier(doc.text, candidate_labels, multi_label=False)
-        return result['labels'][0] if result['scores'][0] > 0.5 else "Mixed"
-    except Exception as e:
-        print(f"Error during communication style classification: {e}")
-        return None
-
-def _get_enhanced_topics(doc: spacy.tokens.Doc) -> Optional[List[str]]:
-    """
-    Uses a zero-shot classifier to identify topics from a predefined list.
-    """
-    if not topic_classifier:
-        return None
-
-    candidate_labels = [
-        'casual conversation', 'hobbies & interests', 'work life', 'school or education',
-        'travel & adventure', 'food & drink', 'health & fitness', 'family & friends',
-        'relationships & dating', 'jokes & humor', 'deep conversation', 'logistics & planning',
-        'compliments', 'flirting'
-    ]
-
-    try:
-        result = topic_classifier(doc.text, candidate_labels, multi_label=True)
-        # Return topics with a score above a certain threshold
-        return [label for label, score in zip(result['labels'], result['scores']) if score > 0.6]
-    except Exception as e:
-        print(f"Error during topic classification: {e}")
-        return None
-
-# --- Common Helper Functions ---
-
-def _detect_ambiguity(doc: spacy.tokens.Doc) -> bool:
-    """Checks for ambiguous phrases."""
-    text_lower = doc.text.lower()
-    return any(phrase in text_lower for phrase in AMBIGUOUS_PHRASES)
+    if user_loc and match_loc:
+        distance_km = great_circle((user_loc.latitude, user_loc.longitude), (match_loc.latitude, match_loc.longitude)).kilometers
+        geo_context.distance["km"] = round(distance_km)
+        geo_context.distance["miles"] = round(distance_km * 0.621371)
+        if geo_context.userLocation.timeZone and geo_context.matchLocation.timeZone:
+            user_offset = datetime.datetime.now(pytz.timezone(geo_context.userLocation.timeZone)).utcoffset().total_seconds() / 3600
+            match_offset = datetime.datetime.now(pytz.timezone(geo_context.matchLocation.timeZone)).utcoffset().total_seconds() / 3600
+            geo_context.timeZoneDifference = int(user_offset - match_offset)
+            geo_context.countryDifference = geo_context.userLocation.timeZone.split('/')[0] != geo_context.matchLocation.timeZone.split('/')[0]
+    return geo_context
 
 def _detect_geo_related(doc: spacy.tokens.Doc) -> bool:
-    """Checks for location-related terms."""
     return any(token.lemma_ in GEO_TRIGGERS for token in doc)
 
 def _suggest_response_style(analysis: MessageAnalysis) -> str:
-    """Suggests a response style based on message analysis."""
-    if analysis.subtext.isSarcastic:
-        return "witty"
-    if "flirting_or_sexual" in analysis.subtext.intents:
-        return "playful"
-    if analysis.subtext.isVulnerable:
-        return "supportive"
-    if analysis.questionInfo.isQuestion:
-        return "direct"
-    if analysis.subtext.valence > 0.5:
-        return "charming"
+    if analysis.subtext.isSarcastic: return "witty"
+    if "flirting_or_sexual" in analysis.subtext.intents: return "playful"
+    if analysis.subtext.isVulnerable: return "supportive"
+    if analysis.questionInfo.isQuestion: return "direct"
+    if analysis.subtext.valence > 0.5: return "charming"
     return "casual"
 
 def _analyze_question(doc: spacy.tokens.Doc) -> QuestionInfo:
@@ -359,21 +215,9 @@ def _is_low_effort(text: str, doc: spacy.tokens.Doc) -> bool:
     if len(doc) < 4 and text_clean in LOW_EFFORT_WORDS: return True
     return all(w.strip(".,!?-") in LOW_EFFORT_WORDS for w in text_clean.split())
 
-def _detect_shit_test(text: str) -> bool:
-    return any(re.search(p, text.lower()) for p in SHIT_TEST_PATTERNS)
-
 def _determine_conversation_state_and_pacing(history: List[ScrapedConversationMessage], last_match_analysis: Optional[MessageAnalysis]) -> Tuple[str, str]:
     if not history: return "OPENER", "normal"
-    last_message, pacing = history[-1], "normal"
-    if last_message.date:
-        try:
-            last_date = datetime.datetime.fromisoformat(last_message.date.replace("Z", "+00:00"))
-            time_since = (datetime.datetime.now(datetime.timezone.utc) - last_date).total_seconds() / 3600
-            if time_since < 1: pacing = "fast"
-            elif time_since > 48: pacing = "stalled"
-        except (ValueError, TypeError): pass
-    if last_message.role == "user": return "AWAITING_REPLY", pacing
-    return "EARLY_CONVO" if sum(1 for m in history if m.role == 'assistant') < 4 else "ACTIVE_CONVO", pacing
+    return "ACTIVE_CONVO", "normal"
 
 def _has_recent_greeting(history: List[ScrapedConversationMessage]) -> bool:
     now = datetime.datetime.now(datetime.timezone.utc)
@@ -381,116 +225,6 @@ def _has_recent_greeting(history: List[ScrapedConversationMessage]) -> bool:
         try:
             msg_date = datetime.datetime.fromisoformat(msg.date.replace("Z", "+00:00"))
             if (now - msg_date).total_seconds() > 12 * 3600: break
-            if msg.role == 'user' and msg.content.lower().split()[0].strip(".,!?-") in GREETING_KEYWORDS: return True
+            if msg.role == 'user' and any(greet in msg.content.lower() for greet in GREETING_KEYWORDS): return True
         except (ValueError, TypeError, AttributeError, IndexError): continue
     return False
-
-def _update_memory_from_history(user_messages: List[MessageAnalysis], match_messages: List[MessageAnalysis], memory: MatchMemory) -> MatchMemory:
-    # --- Investment Score ---
-    investment_delta = 0
-    if match_messages and user_messages:
-        last_match_msg, last_user_msg = match_messages[-1], user_messages[-1]
-        if last_match_msg.questionInfo.isQuestion: investment_delta += INVESTMENT_SCORE_QUESTION_ASKED_BONUS
-        if last_user_msg.questionInfo.isQuestion and not last_match_msg.questionInfo.isQuestion: investment_delta -= INVESTMENT_SCORE_QUESTION_IGNORED_PENALTY
-        if last_match_msg.wordCount >= last_user_msg.wordCount * 0.8: investment_delta += INVESTMENT_SCORE_LENGTH_MATCH_BONUS
-        else: investment_delta -= INVESTMENT_SCORE_LENGTH_MISMATCH_PENALTY
-        if last_match_msg.isLowEffort: investment_delta -= INVESTMENT_SCORE_LOW_EFFORT_PENALTY
-    memory.investmentScore = max(-1, min(1, (memory.investmentScore * INVESTMENT_SCORE_DECAY_FACTOR) + investment_delta))
-
-    # --- Sexual Tension & Rapport ---
-    total_valence, tension_delta = 0, 0
-    for msg in match_messages:
-        total_valence += msg.subtext.valence
-        if "flirting_or_sexual" in msg.subtext.intents: tension_delta += SEXUAL_TENSION_INTENT_BONUS
-    if user_messages and match_messages and "flirting_or_sexual" in user_messages[-1].subtext.intents and match_messages[-1].subtext.valence < -0.2:
-        tension_delta -= SEXUAL_TENSION_NEGATIVE_REACTION_PENALTY
-    memory.sexualTension = max(0, min(1, (memory.sexualTension * SEXUAL_TENSION_DECAY_FACTOR) + tension_delta))
-    avg_valence = total_valence / len(match_messages) if match_messages else 0
-    rapport_bonus = min(len(match_messages) / RAPPORT_CONVO_LENGTH_FACTOR, RAPPORT_CONVO_LENGTH_BONUS_MAX)
-    memory.rapportScore = max(0, min(1, (avg_valence + 1) / 2 + rapport_bonus))
-
-    # --- History-based Memory Fields ---
-    all_messages = sorted(user_messages + match_messages, key=lambda m: m.content) # Note: This sorting seems incorrect, should be by date. Assuming it's a placeholder.
-
-    # Temp storage for topic sentiment before calculating final score
-    topic_sentiments = defaultdict(list)
-
-    for i, msg in enumerate(all_messages):
-        # Populate Question History
-        if msg.questionInfo.isQuestion:
-            memory.questionHistory.append(msg.content)
-
-        # Populate Inside Jokes (Heuristic)
-        if msg.role == 'assistant' and msg.subtext.valence > 0.8 and any(laugh in msg.content.lower() for laugh in ["lmao", "lol", "haha"]):
-            if i > 0 and all_messages[i-1].role == 'user':
-                memory.insideJokes.append(all_messages[i-1].content) # The user's setup line
-
-        # Aggregate Topic Data
-        for topic_text in msg.topics:
-            if topic_text not in memory.topics:
-                memory.topics[topic_text] = TopicDetails(lastMentionIndex=i)
-
-            details = memory.topics[topic_text]
-            details.mentions += 1
-            details.lastMentionIndex = i
-            topic_sentiments[topic_text].append(msg.subtext.valence)
-
-    # Calculate final topic scores
-    for topic, sentiments in topic_sentiments.items():
-        avg_sentiment = sum(sentiments) / len(sentiments)
-        # The 'score' is a combination of avg sentiment and mention frequency bonus
-        mention_bonus = min(memory.topics[topic].mentions * 0.05, 0.2)
-        memory.topics[topic].score = max(-1, min(1, avg_sentiment + mention_bonus))
-
-    return memory
-
-def _update_geo_context(memory: MatchMemory, user_location_str: str, match_location_str: Optional[str], match_profile_doc: spacy.tokens.Doc):
-    user_loc, match_loc = None, None
-    try:
-        user_loc = geolocator.geocode(user_location_str, timeout=5)
-        if user_loc: memory.userLocation = user_loc.address
-    except (GeocoderTimedOut, GeocoderUnavailable): pass
-    location_to_geocode = match_location_str or next((ent.text for ent in match_profile_doc.ents if ent.label_ == 'GPE'), None)
-    if location_to_geocode:
-        try:
-            match_loc = geolocator.geocode(location_to_geocode, timeout=5)
-            if match_loc: memory.matchLocation = match_loc.address
-        except (GeocoderTimedOut, GeocoderUnavailable): pass
-    if user_loc and match_loc:
-        distance = great_circle((user_loc.latitude, user_loc.longitude), (match_loc.latitude, match_loc.longitude)).kilometers
-        memory.estimatedDistanceKm = round(distance, 2)
-        memory.isLongDistance = distance > LONG_DISTANCE_THRESHOLD_KM
-        user_tz_str = tf.timezone_at(lng=user_loc.longitude, lat=user_loc.latitude)
-        match_tz_str = tf.timezone_at(lng=match_loc.longitude, lat=match_loc.latitude)
-        if user_tz_str and match_tz_str:
-            now_utc = datetime.datetime.now(pytz.utc)
-            user_offset = now_utc.astimezone(pytz.timezone(user_tz_str)).utcoffset().total_seconds() / 3600
-            match_offset = now_utc.astimezone(pytz.timezone(match_tz_str)).utcoffset().total_seconds() / 3600
-            memory.timeZoneDifferenceHours = int(user_offset - match_offset)
-
-def _determine_strategic_goal(memory: MatchMemory, last_match_msg: Optional[MessageAnalysis], ultimate_goal: str) -> StrategicGoal:
-    if memory.investmentScore < DORMANT_INVESTMENT_THRESHOLD: memory.engagementState = "DORMANT"
-    elif DORMANT_INVESTMENT_THRESHOLD <= memory.investmentScore < LUKEWARM_INVESTMENT_THRESHOLD: memory.engagementState = "LUKEWARM"
-    else: memory.engagementState = "ACTIVE"
-
-    if last_match_msg and _detect_shit_test(last_match_msg.content): return StrategicGoal(type="MAINTAIN_FRAME", justification="A 'shit test' was detected. Respond with non-defensive humor and confidence.", urgency="critical")
-    if memory.engagementState == "DORMANT": return StrategicGoal(type="PROVIDE_STIMULUS", justification="They are unresponsive. Broadcast value with zero expectation of a reply.", urgency="low")
-    if memory.engagementState == "LUKEWARM": return StrategicGoal(type="ENCOURAGE_INTERACTION", justification="They are giving minimal responses. Make it easy for them to give a better answer.", urgency="normal")
-    if memory.dateArcPhase == "planning": return StrategicGoal(type="HANDLE_LOGISTICS", justification="A date is being planned. Focus on confirming details.", urgency="high")
-
-    ask_conditions_met = memory.rapportScore > ASK_RAPPORT_THRESHOLD and memory.investmentScore > ASK_INVESTMENT_THRESHOLD
-    if ask_conditions_met:
-        if ultimate_goal == "Sexual_Encounter":
-            if memory.sexualTension > ASK_SEXUAL_TENSION_THRESHOLD: return StrategicGoal(type="PROPOSE_ENCOUNTER", justification="Sexual tension and investment are very high. Propose an encounter.", urgency="high")
-            else: return StrategicGoal(type="ESCALATE_SEXUAL_TENSION", justification="Investment is high, but sexual tension is not yet sufficient. Escalate.", urgency="normal")
-        else:
-            if memory.isLongDistance: return StrategicGoal(type="PROPOSE_VIRTUAL_DATE", justification="Rapport and investment are high, but they are long distance. Propose a video call.", urgency="high")
-            else: return StrategicGoal(type="PROPOSE_DATE", justification="Rapport and investment are high and they are local. Ask for an in-person date.", urgency="high")
-
-    if memory.rapportScore > ESCALATE_RAPPORT_THRESHOLD and memory.investmentScore > ESCALATE_INVESTMENT_THRESHOLD and random.random() < PUSH_PULL_TRIGGER_PROBABILITY:
-        return StrategicGoal(type="APPLY_PUSH_PULL", justification="The conversation is good but safe. Create a spark by mixing a compliment with a playful challenge.", urgency="normal")
-    if memory.rapportScore > ESCALATE_RAPPORT_THRESHOLD and memory.investmentScore > ESCALATE_INVESTMENT_THRESHOLD:
-        memory.dateArcPhase = "escalation"
-        return StrategicGoal(type="ESCALATE_FLIRT", justification="Rapport is good and they are invested. Time to move from friendly to flirty.", urgency="normal")
-
-    return StrategicGoal(type="BUILD_RAPPORT", justification="The conversation is active. Continue building connection and positive sentiment.", urgency="normal")
