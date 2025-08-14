@@ -1,0 +1,1358 @@
+,
+{
+    "matchId": "7523b3c33308560bd09948d84909831a3b709d27",
+    "scraped_data": {
+        "myName": "Jay",
+        "theirName": "Haley",
+        "theirProfile": "\nName: Haley, Age: 33\nAbout Them:Social Studies Teacher and HS/Club Soccer coach.\nTheir Profile Prompts:\n- We’ll get along if…: If you enjoy sports; - A fun fact I’m obsessed with...: My dog, soccer, Carolina and Georgia; - After work you can find me: Relaxing and hanging with my dog\nTheir Basics & Interests:\nheight: 5' 7''; exercise: Almost never; education: Graduate degree; drinking: Socially; smoking: Never; gender: Woman; intentions: Relationship; familyplans: Want someday; starsign: Aries; politics: Moderate; religion: Christian",
+        "theirLocationString": "Fort Mill, South Carolina",
+        "conversationHistory": [
+            {
+                "role": "assistant",
+                "content": "Heyy how are you?",
+                "date": "2025-01-25"
+            },
+            {
+                "role": "user",
+                "content": "Hi Haley, I am doing good, how are you?. How is your weekend going so far? Anything fun or interesting this weekend?",
+                "date": "2025-01-26"
+            },
+            {
+                "role": "assistant",
+                "content": "I’m good and mostly just spending time with familt. Family",
+                "date": "2025-01-26"
+            },
+            {
+                "role": "user",
+                "content": "Hey Haley! Hope your week has been as busy as mine. What’s the latest with your soccer team? Any standout players this season?",
+                "date": "2025-08-08"
+            },
+            {
+                "role": "assistant",
+                "content": "Hey it’s been a busy week. I’m not coaching right now",
+                "date": "2025-08-08"
+            },
+            {
+                "role": "user",
+                "content": "I can't wait to hear more about your family time. How's your dog been? He must be excited to have you around more.",
+                "date": "2025-08-08"
+            },
+            {
+                "role": "assistant",
+                "content": "My dog is always excited when I’m home which is why I carve out time each day for him",
+                "date": "2025-08-08"
+            }
+        ]
+    },
+    "ui_settings": {
+        "myLocation": "Auto-Detect Location",
+        "myProfile": "",
+        "local_model_name": "llama3:latest"
+    }
+},
+{
+    "matchId": "9aa535163f9b614bbb8034af7774fad797e4a6a52ab3c3ae1fc67381a66396c1",
+    "scraped_data": {
+        "myName": "Jay",
+        "theirName": "Krisan",
+        "theirProfile": "\nName: Krisan, Age: 27\nAbout Them:Genuine person.\nTheir Profile Prompts:\n- I’m happiest when: When I’m comfortable being authentically me with someone.\nTheir Basics & Interests:\nheight: 5' 1''; exercise: Active; education: Undergraduate degree; drinking: Socially; smoking: Never; gender: Woman; intentions: Relationship; familyplans: Want someday; religion: Christian",
+        "theirLocationString": null,
+        "conversationHistory": [
+            {
+                "role": "user",
+                "content": "I'm good, thanks! Just taking a break from work. How about you? 😊",
+                "date": "2025-08-05"
+            },
+            {
+                "role": "assistant",
+                "content": "I’m all great. Thanks. Just waking up. Where are you? You work so early. Haha",
+                "date": "2025-08-05"
+            },
+            {
+                "role": "user",
+                "content": "I'm in the US, so it's afternoon for me. 🌞 How's your morning going? 😊",
+                "date": "2025-08-05"
+            },
+            {
+                "role": "assistant",
+                "content": "Oh okay. Very near. Haha. All is well. Still in bed… I’ll wait my niece to wake up then I’m good to go. Haha. Reading your bio… it’s just so good. Haha",
+                "date": "2025-08-05"
+            },
+            {
+                "role": "user",
+                "content": "You must be a morning person! I can barely function before my second cup of coffee. 😜",
+                "date": "2025-08-05"
+            },
+            {
+                "role": "assistant",
+                "content": "Hahaha. Not so early though.. Early for me is like 4am. Hahaha. Depends also if I sleep early at night.. I can be an energizer for you. Haha",
+                "date": "2025-08-05"
+            },
+            {
+                "role": "user",
+                "content": "I can see why you're a morning person! You seem so put-together even when you're just waking up. 😜. You know, you have this natural charm that just draws people in. It's like you're a magnet for positivity. 😜. I’m always up for a little morning energy boost. What’s your favorite way to start the day? 😉",
+                "date": "2025-08-05"
+            },
+            {
+                "role": "assistant",
+                "content": "Hahaha. I can be… especially if I had a good night sleep… no snoring beside me. Hahaha. Do I? You do toooooo!!!. To start the day… I wanna smooochy smooochy kiss my niece. I like kissing cute kid’s cheeks.. I do pray first in the morning.. Clean.. Then I work out.. You?",
+                "date": "2025-08-05"
+            },
+            {
+                "role": "user",
+                "content": "I usually start my day with a quick jog and some coffee. It helps me clear my head and set a positive tone for the rest of the day.. I love the sound of your morning routine! Kissing your niece's cheeks sounds so sweet. What are your plans for the day, Krisan? 😏",
+                "date": "2025-08-05"
+            },
+            {
+                "role": "assistant",
+                "content": "Nice… I like that you like to work out. Haha. Yeah… I’ve been doing it for years till she pushed me away. Hahaha. Nothing much really.. I’m still looking for a new work.. You?",
+                "date": "2025-08-05"
+            },
+            {
+                "role": "user",
+                "content": "You're looking for a new job? That's great! Hope you find something that makes you happy and fulfilled. 🤞",
+                "date": "2025-08-05"
+            },
+            {
+                "role": "assistant",
+                "content": "I definitely will… appreciate that!!! Hihi. What do you do?",
+                "date": "2025-08-05"
+            },
+            {
+                "role": "user",
+                "content": "I'm a software engineer, but I'm always looking to learn new skills. How about you? What kind of work are you interested in? 😉",
+                "date": "2025-08-06"
+            },
+            {
+                "role": "assistant",
+                "content": "I have my degree in Hotel Management.. I used to work for a BPO company.. Now I’m exploring which company to work for.. You have great career btw.",
+                "date": "2025-08-06"
+            },
+            {
+                "role": "user",
+                "content": "I can imagine you'd be a natural in a role that involves a lot of interaction and making people feel welcome, like hospitality or customer service. You've got that warm, welcoming energy that puts people at ease. 🌟",
+                "date": "2025-08-06"
+            },
+            {
+                "role": "assistant",
+                "content": "I love that you put effort on making me feel great. Haha. I’m very much hospitable.. I can give you a warm welcome here also. Hahaha",
+                "date": "2025-08-06"
+            },
+            {
+                "role": "user",
+                "content": "I can see why people would love having you around! You've got that special something that makes everyone feel welcome and appreciated.",
+                "date": "2025-08-06"
+            },
+            {
+                "role": "assistant",
+                "content": "Would you love me to be around you? Haha",
+                "date": "2025-08-06"
+            },
+            {
+                "role": "user",
+                "content": "Of course! Your energy is contagious, and I think you'd make everyone around you happy and feel like they're home. So yeah, I'd love you to be around! 😊",
+                "date": "2025-08-07"
+            },
+            {
+                "role": "assistant",
+                "content": "Hihi. You’re too kind. But yes… I’m quite like that. Haha. Still here?",
+                "date": "2025-08-11"
+            }
+        ]
+    },
+    "ui_settings": {
+        "myLocation": "Auto-Detect Location",
+        "myProfile": "A fun-loving person looking for interesting conversations and seeing where things go.",
+        "local_model_name": "llama3:latest"
+    }
+},
+{
+    "matchId": "3741e9225b3b59edc7422ad1e51ec6848e66d5af",
+    "scraped_data": {
+        "myName": "Jay",
+        "theirName": "Krisan",
+        "theirProfile": "\nName: Krisan, Age: 27\nAbout Them:Genuine person.\nTheir Profile Prompts:\n- I’m happiest when: When I’m comfortable being authentically me with someone.\nTheir Basics & Interests:\nheight: 5' 1''; exercise: Active; education: Undergraduate degree; drinking: Socially; smoking: Never; gender: Woman; intentions: Relationship; familyplans: Want someday; religion: Christian",
+        "theirLocationString": "General Trias, Cavite, Philippines",
+        "conversationHistory": [
+            {
+                "role": "user",
+                "content": "I'm good, thanks! Just taking a break from work. How about you? 😊",
+                "date": "2025-08-05"
+            },
+            {
+                "role": "assistant",
+                "content": "I’m all great. Thanks. Just waking up. Where are you? You work so early. Haha",
+                "date": "2025-08-05"
+            },
+            {
+                "role": "user",
+                "content": "I'm in the US, so it's afternoon for me. 🌞 How's your morning going? 😊",
+                "date": "2025-08-05"
+            },
+            {
+                "role": "assistant",
+                "content": "Oh okay. Very near. Haha. All is well. Still in bed… I’ll wait my niece to wake up then I’m good to go. Haha. Reading your bio… it’s just so good. Haha",
+                "date": "2025-08-05"
+            },
+            {
+                "role": "user",
+                "content": "You must be a morning person! I can barely function before my second cup of coffee. 😜",
+                "date": "2025-08-05"
+            },
+            {
+                "role": "assistant",
+                "content": "Hahaha. Not so early though.. Early for me is like 4am. Hahaha. Depends also if I sleep early at night.. I can be an energizer for you. Haha",
+                "date": "2025-08-05"
+            },
+            {
+                "role": "user",
+                "content": "I can see why you're a morning person! You seem so put-together even when you're just waking up. 😜. You know, you have this natural charm that just draws people in. It's like you're a magnet for positivity. 😜. I’m always up for a little morning energy boost. What’s your favorite way to start the day? 😉",
+                "date": "2025-08-05"
+            },
+            {
+                "role": "assistant",
+                "content": "Hahaha. I can be… especially if I had a good night sleep… no snoring beside me. Hahaha. Do I? You do toooooo!!!. To start the day… I wanna smooochy smooochy kiss my niece. I like kissing cute kid’s cheeks.. I do pray first in the morning.. Clean.. Then I work out.. You?",
+                "date": "2025-08-05"
+            },
+            {
+                "role": "user",
+                "content": "I usually start my day with a quick jog and some coffee. It helps me clear my head and set a positive tone for the rest of the day.. I love the sound of your morning routine! Kissing your niece's cheeks sounds so sweet. What are your plans for the day, Krisan? 😏",
+                "date": "2025-08-05"
+            },
+            {
+                "role": "assistant",
+                "content": "Nice… I like that you like to work out. Haha. Yeah… I’ve been doing it for years till she pushed me away. Hahaha. Nothing much really.. I’m still looking for a new work.. You?",
+                "date": "2025-08-05"
+            },
+            {
+                "role": "user",
+                "content": "You're looking for a new job? That's great! Hope you find something that makes you happy and fulfilled. 🤞",
+                "date": "2025-08-05"
+            },
+            {
+                "role": "assistant",
+                "content": "I definitely will… appreciate that!!! Hihi. What do you do?",
+                "date": "2025-08-05"
+            },
+            {
+                "role": "user",
+                "content": "I'm a software engineer, but I'm always looking to learn new skills. How about you? What kind of work are you interested in? 😉",
+                "date": "2025-08-06"
+            },
+            {
+                "role": "assistant",
+                "content": "I have my degree in Hotel Management.. I used to work for a BPO company.. Now I’m exploring which company to work for.. You have great career btw.",
+                "date": "2025-08-06"
+            },
+            {
+                "role": "user",
+                "content": "I can imagine you'd be a natural in a role that involves a lot of interaction and making people feel welcome, like hospitality or customer service. You've got that warm, welcoming energy that puts people at ease. 🌟",
+                "date": "2025-08-06"
+            },
+            {
+                "role": "assistant",
+                "content": "I love that you put effort on making me feel great. Haha. I’m very much hospitable.. I can give you a warm welcome here also. Hahaha",
+                "date": "2025-08-06"
+            },
+            {
+                "role": "user",
+                "content": "I can see why people would love having you around! You've got that special something that makes everyone feel welcome and appreciated.",
+                "date": "2025-08-06"
+            },
+            {
+                "role": "assistant",
+                "content": "Would you love me to be around you? Haha",
+                "date": "2025-08-06"
+            },
+            {
+                "role": "user",
+                "content": "Of course! Your energy is contagious, and I think you'd make everyone around you happy and feel like they're home. So yeah, I'd love you to be around! 😊",
+                "date": "2025-08-07"
+            },
+            {
+                "role": "assistant",
+                "content": "Hihi. You’re too kind. But yes… I’m quite like that. Haha. Still here?",
+                "date": "2025-08-11"
+            }
+        ]
+    },
+    "ui_settings": {
+        "myLocation": "Auto-Detect Location",
+        "myProfile": "",
+        "local_model_name": "llama3:latest"
+    }
+},
+{
+    "matchId": "9aa535163f9b614bbb8034af7774fad797e4a6a52ab3c3ae1fc67381a66396c1",
+    "scraped_data": {
+        "myName": "Jay",
+        "theirName": "Krisan",
+        "theirProfile": "\nName: Krisan, Age: 27\nAbout Them:Genuine person.\nTheir Profile Prompts:\n- I’m happiest when: When I’m comfortable being authentically me with someone.\nTheir Basics & Interests:\nheight: 5' 1''; exercise: Active; education: Undergraduate degree; drinking: Socially; smoking: Never; gender: Woman; intentions: Relationship; familyplans: Want someday; religion: Christian",
+        "theirLocationString": null,
+        "conversationHistory": [
+            {
+                "role": "user",
+                "content": "I'm good, thanks! Just taking a break from work. How about you? 😊",
+                "date": "2025-08-05"
+            },
+            {
+                "role": "assistant",
+                "content": "I’m all great. Thanks. Just waking up. Where are you? You work so early. Haha",
+                "date": "2025-08-05"
+            },
+            {
+                "role": "user",
+                "content": "I'm in the US, so it's afternoon for me. 🌞 How's your morning going? 😊",
+                "date": "2025-08-05"
+            },
+            {
+                "role": "assistant",
+                "content": "Oh okay. Very near. Haha. All is well. Still in bed… I’ll wait my niece to wake up then I’m good to go. Haha. Reading your bio… it’s just so good. Haha",
+                "date": "2025-08-05"
+            },
+            {
+                "role": "user",
+                "content": "You must be a morning person! I can barely function before my second cup of coffee. 😜",
+                "date": "2025-08-05"
+            },
+            {
+                "role": "assistant",
+                "content": "Hahaha. Not so early though.. Early for me is like 4am. Hahaha. Depends also if I sleep early at night.. I can be an energizer for you. Haha",
+                "date": "2025-08-05"
+            },
+            {
+                "role": "user",
+                "content": "I can see why you're a morning person! You seem so put-together even when you're just waking up. 😜. You know, you have this natural charm that just draws people in. It's like you're a magnet for positivity. 😜. I’m always up for a little morning energy boost. What’s your favorite way to start the day? 😉",
+                "date": "2025-08-05"
+            },
+            {
+                "role": "assistant",
+                "content": "Hahaha. I can be… especially if I had a good night sleep… no snoring beside me. Hahaha. Do I? You do toooooo!!!. To start the day… I wanna smooochy smooochy kiss my niece. I like kissing cute kid’s cheeks.. I do pray first in the morning.. Clean.. Then I work out.. You?",
+                "date": "2025-08-05"
+            },
+            {
+                "role": "user",
+                "content": "I usually start my day with a quick jog and some coffee. It helps me clear my head and set a positive tone for the rest of the day.. I love the sound of your morning routine! Kissing your niece's cheeks sounds so sweet. What are your plans for the day, Krisan? 😏",
+                "date": "2025-08-05"
+            },
+            {
+                "role": "assistant",
+                "content": "Nice… I like that you like to work out. Haha. Yeah… I’ve been doing it for years till she pushed me away. Hahaha. Nothing much really.. I’m still looking for a new work.. You?",
+                "date": "2025-08-05"
+            },
+            {
+                "role": "user",
+                "content": "You're looking for a new job? That's great! Hope you find something that makes you happy and fulfilled. 🤞",
+                "date": "2025-08-05"
+            },
+            {
+                "role": "assistant",
+                "content": "I definitely will… appreciate that!!! Hihi. What do you do?",
+                "date": "2025-08-05"
+            },
+            {
+                "role": "user",
+                "content": "I'm a software engineer, but I'm always looking to learn new skills. How about you? What kind of work are you interested in? 😉",
+                "date": "2025-08-06"
+            },
+            {
+                "role": "assistant",
+                "content": "I have my degree in Hotel Management.. I used to work for a BPO company.. Now I’m exploring which company to work for.. You have great career btw.",
+                "date": "2025-08-06"
+            },
+            {
+                "role": "user",
+                "content": "I can imagine you'd be a natural in a role that involves a lot of interaction and making people feel welcome, like hospitality or customer service. You've got that warm, welcoming energy that puts people at ease. 🌟",
+                "date": "2025-08-06"
+            },
+            {
+                "role": "assistant",
+                "content": "I love that you put effort on making me feel great. Haha. I’m very much hospitable.. I can give you a warm welcome here also. Hahaha",
+                "date": "2025-08-06"
+            },
+            {
+                "role": "user",
+                "content": "I can see why people would love having you around! You've got that special something that makes everyone feel welcome and appreciated.",
+                "date": "2025-08-06"
+            },
+            {
+                "role": "assistant",
+                "content": "Would you love me to be around you? Haha",
+                "date": "2025-08-06"
+            },
+            {
+                "role": "user",
+                "content": "Of course! Your energy is contagious, and I think you'd make everyone around you happy and feel like they're home. So yeah, I'd love you to be around! 😊",
+                "date": "2025-08-07"
+            },
+            {
+                "role": "assistant",
+                "content": "Hihi. You’re too kind. But yes… I’m quite like that. Haha. Still here?",
+                "date": "2025-08-11"
+            }
+        ]
+    },
+    "ui_settings": {
+        "myLocation": "Auto-Detect Location",
+        "myProfile": "A fun-loving person looking for interesting conversations and seeing where things go.",
+        "local_model_name": "llama3:latest"
+    }
+},
+{
+    "matchId": "9aa535163f9b614bbb8034af7774fad797e4a6a52ab3c3ae1fc67381a66396c1",
+    "scraped_data": {
+        "myName": "Jay",
+        "theirName": "Krisan",
+        "theirProfile": "\nName: Krisan, Age: 27\nAbout Them:Genuine person.\nTheir Profile Prompts:\n- I’m happiest when: When I’m comfortable being authentically me with someone.\nTheir Basics & Interests:\nheight: 5' 1''; exercise: Active; education: Undergraduate degree; drinking: Socially; smoking: Never; gender: Woman; intentions: Relationship; familyplans: Want someday; religion: Christian",
+        "theirLocationString": null,
+        "conversationHistory": [
+            {
+                "role": "user",
+                "content": "I'm good, thanks! Just taking a break from work. How about you? 😊",
+                "date": "2025-08-05"
+            },
+            {
+                "role": "assistant",
+                "content": "I’m all great. Thanks. Just waking up. Where are you? You work so early. Haha",
+                "date": "2025-08-05"
+            },
+            {
+                "role": "user",
+                "content": "I'm in the US, so it's afternoon for me. 🌞 How's your morning going? 😊",
+                "date": "2025-08-05"
+            },
+            {
+                "role": "assistant",
+                "content": "Oh okay. Very near. Haha. All is well. Still in bed… I’ll wait my niece to wake up then I’m good to go. Haha. Reading your bio… it’s just so good. Haha",
+                "date": "2025-08-05"
+            },
+            {
+                "role": "user",
+                "content": "You must be a morning person! I can barely function before my second cup of coffee. 😜",
+                "date": "2025-08-05"
+            },
+            {
+                "role": "assistant",
+                "content": "Hahaha. Not so early though.. Early for me is like 4am. Hahaha. Depends also if I sleep early at night.. I can be an energizer for you. Haha",
+                "date": "2025-08-05"
+            },
+            {
+                "role": "user",
+                "content": "I can see why you're a morning person! You seem so put-together even when you're just waking up. 😜. You know, you have this natural charm that just draws people in. It's like you're a magnet for positivity. 😜. I’m always up for a little morning energy boost. What’s your favorite way to start the day? 😉",
+                "date": "2025-08-05"
+            },
+            {
+                "role": "assistant",
+                "content": "Hahaha. I can be… especially if I had a good night sleep… no snoring beside me. Hahaha. Do I? You do toooooo!!!. To start the day… I wanna smooochy smooochy kiss my niece. I like kissing cute kid’s cheeks.. I do pray first in the morning.. Clean.. Then I work out.. You?",
+                "date": "2025-08-05"
+            },
+            {
+                "role": "user",
+                "content": "I usually start my day with a quick jog and some coffee. It helps me clear my head and set a positive tone for the rest of the day.. I love the sound of your morning routine! Kissing your niece's cheeks sounds so sweet. What are your plans for the day, Krisan? 😏",
+                "date": "2025-08-05"
+            },
+            {
+                "role": "assistant",
+                "content": "Nice… I like that you like to work out. Haha. Yeah… I’ve been doing it for years till she pushed me away. Hahaha. Nothing much really.. I’m still looking for a new work.. You?",
+                "date": "2025-08-05"
+            },
+            {
+                "role": "user",
+                "content": "You're looking for a new job? That's great! Hope you find something that makes you happy and fulfilled. 🤞",
+                "date": "2025-08-05"
+            },
+            {
+                "role": "assistant",
+                "content": "I definitely will… appreciate that!!! Hihi. What do you do?",
+                "date": "2025-08-05"
+            },
+            {
+                "role": "user",
+                "content": "I'm a software engineer, but I'm always looking to learn new skills. How about you? What kind of work are you interested in? 😉",
+                "date": "2025-08-06"
+            },
+            {
+                "role": "assistant",
+                "content": "I have my degree in Hotel Management.. I used to work for a BPO company.. Now I’m exploring which company to work for.. You have great career btw.",
+                "date": "2025-08-06"
+            },
+            {
+                "role": "user",
+                "content": "I can imagine you'd be a natural in a role that involves a lot of interaction and making people feel welcome, like hospitality or customer service. You've got that warm, welcoming energy that puts people at ease. 🌟",
+                "date": "2025-08-06"
+            },
+            {
+                "role": "assistant",
+                "content": "I love that you put effort on making me feel great. Haha. I’m very much hospitable.. I can give you a warm welcome here also. Hahaha",
+                "date": "2025-08-06"
+            },
+            {
+                "role": "user",
+                "content": "I can see why people would love having you around! You've got that special something that makes everyone feel welcome and appreciated.",
+                "date": "2025-08-06"
+            },
+            {
+                "role": "assistant",
+                "content": "Would you love me to be around you? Haha",
+                "date": "2025-08-06"
+            },
+            {
+                "role": "user",
+                "content": "Of course! Your energy is contagious, and I think you'd make everyone around you happy and feel like they're home. So yeah, I'd love you to be around! 😊",
+                "date": "2025-08-07"
+            },
+            {
+                "role": "assistant",
+                "content": "Hihi. You’re too kind. But yes… I’m quite like that. Haha. Still here?",
+                "date": "2025-08-11"
+            }
+        ]
+    },
+    "ui_settings": {
+        "myLocation": "Auto-Detect Location",
+        "myProfile": "A fun-loving person looking for interesting conversations and seeing where things go.",
+        "local_model_name": "llama3:latest"
+    }
+},
+{
+    "matchId": "9aa535163f9b614bbb8034af7774fad797e4a6a52ab3c3ae1fc67381a66396c1",
+    "scraped_data": {
+        "myName": "Jay",
+        "theirName": "Krisan",
+        "theirProfile": "\nName: Krisan, Age: 27\nAbout Them:Genuine person.\nTheir Profile Prompts:\n- I’m happiest when: When I’m comfortable being authentically me with someone.\nTheir Basics & Interests:\nheight: 5' 1''; exercise: Active; education: Undergraduate degree; drinking: Socially; smoking: Never; gender: Woman; intentions: Relationship; familyplans: Want someday; religion: Christian",
+        "theirLocationString": null,
+        "conversationHistory": [
+            {
+                "role": "user",
+                "content": "I'm good, thanks! Just taking a break from work. How about you? 😊",
+                "date": "2025-08-05"
+            },
+            {
+                "role": "assistant",
+                "content": "I’m all great. Thanks. Just waking up. Where are you? You work so early. Haha",
+                "date": "2025-08-05"
+            },
+            {
+                "role": "user",
+                "content": "I'm in the US, so it's afternoon for me. 🌞 How's your morning going? 😊",
+                "date": "2025-08-05"
+            },
+            {
+                "role": "assistant",
+                "content": "Oh okay. Very near. Haha. All is well. Still in bed… I’ll wait my niece to wake up then I’m good to go. Haha. Reading your bio… it’s just so good. Haha",
+                "date": "2025-08-05"
+            },
+            {
+                "role": "user",
+                "content": "You must be a morning person! I can barely function before my second cup of coffee. 😜",
+                "date": "2025-08-05"
+            },
+            {
+                "role": "assistant",
+                "content": "Hahaha. Not so early though.. Early for me is like 4am. Hahaha. Depends also if I sleep early at night.. I can be an energizer for you. Haha",
+                "date": "2025-08-05"
+            },
+            {
+                "role": "user",
+                "content": "I can see why you're a morning person! You seem so put-together even when you're just waking up. 😜. You know, you have this natural charm that just draws people in. It's like you're a magnet for positivity. 😜. I’m always up for a little morning energy boost. What’s your favorite way to start the day? 😉",
+                "date": "2025-08-05"
+            },
+            {
+                "role": "assistant",
+                "content": "Hahaha. I can be… especially if I had a good night sleep… no snoring beside me. Hahaha. Do I? You do toooooo!!!. To start the day… I wanna smooochy smooochy kiss my niece. I like kissing cute kid’s cheeks.. I do pray first in the morning.. Clean.. Then I work out.. You?",
+                "date": "2025-08-05"
+            },
+            {
+                "role": "user",
+                "content": "I usually start my day with a quick jog and some coffee. It helps me clear my head and set a positive tone for the rest of the day.. I love the sound of your morning routine! Kissing your niece's cheeks sounds so sweet. What are your plans for the day, Krisan? 😏",
+                "date": "2025-08-05"
+            },
+            {
+                "role": "assistant",
+                "content": "Nice… I like that you like to work out. Haha. Yeah… I’ve been doing it for years till she pushed me away. Hahaha. Nothing much really.. I’m still looking for a new work.. You?",
+                "date": "2025-08-05"
+            },
+            {
+                "role": "user",
+                "content": "You're looking for a new job? That's great! Hope you find something that makes you happy and fulfilled. 🤞",
+                "date": "2025-08-05"
+            },
+            {
+                "role": "assistant",
+                "content": "I definitely will… appreciate that!!! Hihi. What do you do?",
+                "date": "2025-08-05"
+            },
+            {
+                "role": "user",
+                "content": "I'm a software engineer, but I'm always looking to learn new skills. How about you? What kind of work are you interested in? 😉",
+                "date": "2025-08-06"
+            },
+            {
+                "role": "assistant",
+                "content": "I have my degree in Hotel Management.. I used to work for a BPO company.. Now I’m exploring which company to work for.. You have great career btw.",
+                "date": "2025-08-06"
+            },
+            {
+                "role": "user",
+                "content": "I can imagine you'd be a natural in a role that involves a lot of interaction and making people feel welcome, like hospitality or customer service. You've got that warm, welcoming energy that puts people at ease. 🌟",
+                "date": "2025-08-06"
+            },
+            {
+                "role": "assistant",
+                "content": "I love that you put effort on making me feel great. Haha. I’m very much hospitable.. I can give you a warm welcome here also. Hahaha",
+                "date": "2025-08-06"
+            },
+            {
+                "role": "user",
+                "content": "I can see why people would love having you around! You've got that special something that makes everyone feel welcome and appreciated.",
+                "date": "2025-08-06"
+            },
+            {
+                "role": "assistant",
+                "content": "Would you love me to be around you? Haha",
+                "date": "2025-08-06"
+            },
+            {
+                "role": "user",
+                "content": "Of course! Your energy is contagious, and I think you'd make everyone around you happy and feel like they're home. So yeah, I'd love you to be around! 😊",
+                "date": "2025-08-07"
+            },
+            {
+                "role": "assistant",
+                "content": "Hihi. You’re too kind. But yes… I’m quite like that. Haha. Still here?",
+                "date": "2025-08-11"
+            }
+        ]
+    },
+    "ui_settings": {
+        "myLocation": "Auto-Detect Location",
+        "myProfile": "A fun-loving person looking for interesting conversations and seeing where things go.",
+        "local_model_name": "llama3:latest"
+    }
+},
+{
+    "matchId": "9aa535163f9b614bbb8034af7774fad797e4a6a52ab3c3ae1fc67381a66396c1",
+    "scraped_data": {
+        "myName": "Jay",
+        "theirName": "Krisan",
+        "theirProfile": "\nName: Krisan, Age: 27\nAbout Them:Genuine person.\nTheir Profile Prompts:\n- I’m happiest when: When I’m comfortable being authentically me with someone.\nTheir Basics & Interests:\nheight: 5' 1''; exercise: Active; education: Undergraduate degree; drinking: Socially; smoking: Never; gender: Woman; intentions: Relationship; familyplans: Want someday; religion: Christian",
+        "theirLocationString": null,
+        "conversationHistory": [
+            {
+                "role": "user",
+                "content": "I'm good, thanks! Just taking a break from work. How about you? 😊",
+                "date": "2025-08-05"
+            },
+            {
+                "role": "assistant",
+                "content": "I’m all great. Thanks. Just waking up. Where are you? You work so early. Haha",
+                "date": "2025-08-05"
+            },
+            {
+                "role": "user",
+                "content": "I'm in the US, so it's afternoon for me. 🌞 How's your morning going? 😊",
+                "date": "2025-08-05"
+            },
+            {
+                "role": "assistant",
+                "content": "Oh okay. Very near. Haha. All is well. Still in bed… I’ll wait my niece to wake up then I’m good to go. Haha. Reading your bio… it’s just so good. Haha",
+                "date": "2025-08-05"
+            },
+            {
+                "role": "user",
+                "content": "You must be a morning person! I can barely function before my second cup of coffee. 😜",
+                "date": "2025-08-05"
+            },
+            {
+                "role": "assistant",
+                "content": "Hahaha. Not so early though.. Early for me is like 4am. Hahaha. Depends also if I sleep early at night.. I can be an energizer for you. Haha",
+                "date": "2025-08-05"
+            },
+            {
+                "role": "user",
+                "content": "I can see why you're a morning person! You seem so put-together even when you're just waking up. 😜. You know, you have this natural charm that just draws people in. It's like you're a magnet for positivity. 😜. I’m always up for a little morning energy boost. What’s your favorite way to start the day? 😉",
+                "date": "2025-08-05"
+            },
+            {
+                "role": "assistant",
+                "content": "Hahaha. I can be… especially if I had a good night sleep… no snoring beside me. Hahaha. Do I? You do toooooo!!!. To start the day… I wanna smooochy smooochy kiss my niece. I like kissing cute kid’s cheeks.. I do pray first in the morning.. Clean.. Then I work out.. You?",
+                "date": "2025-08-05"
+            },
+            {
+                "role": "user",
+                "content": "I usually start my day with a quick jog and some coffee. It helps me clear my head and set a positive tone for the rest of the day.. I love the sound of your morning routine! Kissing your niece's cheeks sounds so sweet. What are your plans for the day, Krisan? 😏",
+                "date": "2025-08-05"
+            },
+            {
+                "role": "assistant",
+                "content": "Nice… I like that you like to work out. Haha. Yeah… I’ve been doing it for years till she pushed me away. Hahaha. Nothing much really.. I’m still looking for a new work.. You?",
+                "date": "2025-08-05"
+            },
+            {
+                "role": "user",
+                "content": "You're looking for a new job? That's great! Hope you find something that makes you happy and fulfilled. 🤞",
+                "date": "2025-08-05"
+            },
+            {
+                "role": "assistant",
+                "content": "I definitely will… appreciate that!!! Hihi. What do you do?",
+                "date": "2025-08-05"
+            },
+            {
+                "role": "user",
+                "content": "I'm a software engineer, but I'm always looking to learn new skills. How about you? What kind of work are you interested in? 😉",
+                "date": "2025-08-06"
+            },
+            {
+                "role": "assistant",
+                "content": "I have my degree in Hotel Management.. I used to work for a BPO company.. Now I’m exploring which company to work for.. You have great career btw.",
+                "date": "2025-08-06"
+            },
+            {
+                "role": "user",
+                "content": "I can imagine you'd be a natural in a role that involves a lot of interaction and making people feel welcome, like hospitality or customer service. You've got that warm, welcoming energy that puts people at ease. 🌟",
+                "date": "2025-08-06"
+            },
+            {
+                "role": "assistant",
+                "content": "I love that you put effort on making me feel great. Haha. I’m very much hospitable.. I can give you a warm welcome here also. Hahaha",
+                "date": "2025-08-06"
+            },
+            {
+                "role": "user",
+                "content": "I can see why people would love having you around! You've got that special something that makes everyone feel welcome and appreciated.",
+                "date": "2025-08-06"
+            },
+            {
+                "role": "assistant",
+                "content": "Would you love me to be around you? Haha",
+                "date": "2025-08-06"
+            },
+            {
+                "role": "user",
+                "content": "Of course! Your energy is contagious, and I think you'd make everyone around you happy and feel like they're home. So yeah, I'd love you to be around! 😊",
+                "date": "2025-08-07"
+            },
+            {
+                "role": "assistant",
+                "content": "Hihi. You’re too kind. But yes… I’m quite like that. Haha. Still here?",
+                "date": "2025-08-11"
+            }
+        ]
+    },
+    "ui_settings": {
+        "myLocation": "Auto-Detect Location",
+        "myProfile": "A fun-loving person looking for interesting conversations and seeing where things go.",
+        "local_model_name": "llama3:latest"
+    }
+},
+{
+    "matchId": "9aa535163f9b614bbb8034af7774fad797e4a6a52ab3c3ae1fc67381a66396c1",
+    "scraped_data": {
+        "myName": "Jay",
+        "theirName": "Krisan",
+        "theirProfile": "\nName: Krisan, Age: 27\nAbout Them:Genuine person.\nTheir Profile Prompts:\n- I’m happiest when: When I’m comfortable being authentically me with someone.\nTheir Basics & Interests:\nheight: 5' 1''; exercise: Active; education: Undergraduate degree; drinking: Socially; smoking: Never; gender: Woman; intentions: Relationship; familyplans: Want someday; religion: Christian",
+        "theirLocationString": null,
+        "conversationHistory": [
+            {
+                "role": "user",
+                "content": "I'm good, thanks! Just taking a break from work. How about you? 😊",
+                "date": "2025-08-05"
+            },
+            {
+                "role": "assistant",
+                "content": "I’m all great. Thanks. Just waking up. Where are you? You work so early. Haha",
+                "date": "2025-08-05"
+            },
+            {
+                "role": "user",
+                "content": "I'm in the US, so it's afternoon for me. 🌞 How's your morning going? 😊",
+                "date": "2025-08-05"
+            },
+            {
+                "role": "assistant",
+                "content": "Oh okay. Very near. Haha. All is well. Still in bed… I’ll wait my niece to wake up then I’m good to go. Haha. Reading your bio… it’s just so good. Haha",
+                "date": "2025-08-05"
+            },
+            {
+                "role": "user",
+                "content": "You must be a morning person! I can barely function before my second cup of coffee. 😜",
+                "date": "2025-08-05"
+            },
+            {
+                "role": "assistant",
+                "content": "Hahaha. Not so early though.. Early for me is like 4am. Hahaha. Depends also if I sleep early at night.. I can be an energizer for you. Haha",
+                "date": "2025-08-05"
+            },
+            {
+                "role": "user",
+                "content": "I can see why you're a morning person! You seem so put-together even when you're just waking up. 😜. You know, you have this natural charm that just draws people in. It's like you're a magnet for positivity. 😜. I’m always up for a little morning energy boost. What’s your favorite way to start the day? 😉",
+                "date": "2025-08-05"
+            },
+            {
+                "role": "assistant",
+                "content": "Hahaha. I can be… especially if I had a good night sleep… no snoring beside me. Hahaha. Do I? You do toooooo!!!. To start the day… I wanna smooochy smooochy kiss my niece. I like kissing cute kid’s cheeks.. I do pray first in the morning.. Clean.. Then I work out.. You?",
+                "date": "2025-08-05"
+            },
+            {
+                "role": "user",
+                "content": "I usually start my day with a quick jog and some coffee. It helps me clear my head and set a positive tone for the rest of the day.. I love the sound of your morning routine! Kissing your niece's cheeks sounds so sweet. What are your plans for the day, Krisan? 😏",
+                "date": "2025-08-05"
+            },
+            {
+                "role": "assistant",
+                "content": "Nice… I like that you like to work out. Haha. Yeah… I’ve been doing it for years till she pushed me away. Hahaha. Nothing much really.. I’m still looking for a new work.. You?",
+                "date": "2025-08-05"
+            },
+            {
+                "role": "user",
+                "content": "You're looking for a new job? That's great! Hope you find something that makes you happy and fulfilled. 🤞",
+                "date": "2025-08-05"
+            },
+            {
+                "role": "assistant",
+                "content": "I definitely will… appreciate that!!! Hihi. What do you do?",
+                "date": "2025-08-05"
+            },
+            {
+                "role": "user",
+                "content": "I'm a software engineer, but I'm always looking to learn new skills. How about you? What kind of work are you interested in? 😉",
+                "date": "2025-08-06"
+            },
+            {
+                "role": "assistant",
+                "content": "I have my degree in Hotel Management.. I used to work for a BPO company.. Now I’m exploring which company to work for.. You have great career btw.",
+                "date": "2025-08-06"
+            },
+            {
+                "role": "user",
+                "content": "I can imagine you'd be a natural in a role that involves a lot of interaction and making people feel welcome, like hospitality or customer service. You've got that warm, welcoming energy that puts people at ease. 🌟",
+                "date": "2025-08-06"
+            },
+            {
+                "role": "assistant",
+                "content": "I love that you put effort on making me feel great. Haha. I’m very much hospitable.. I can give you a warm welcome here also. Hahaha",
+                "date": "2025-08-06"
+            },
+            {
+                "role": "user",
+                "content": "I can see why people would love having you around! You've got that special something that makes everyone feel welcome and appreciated.",
+                "date": "2025-08-06"
+            },
+            {
+                "role": "assistant",
+                "content": "Would you love me to be around you? Haha",
+                "date": "2025-08-06"
+            },
+            {
+                "role": "user",
+                "content": "Of course! Your energy is contagious, and I think you'd make everyone around you happy and feel like they're home. So yeah, I'd love you to be around! 😊",
+                "date": "2025-08-07"
+            },
+            {
+                "role": "assistant",
+                "content": "Hihi. You’re too kind. But yes… I’m quite like that. Haha. Still here?",
+                "date": "2025-08-11"
+            }
+        ]
+    },
+    "ui_settings": {
+        "myLocation": "Auto-Detect Location",
+        "myProfile": "A fun-loving person looking for interesting conversations and seeing where things go.",
+        "local_model_name": "llama3:latest"
+    }
+},
+{
+    "matchId": "9aa535163f9b614bbb8034af7774fad797e4a6a52ab3c3ae1fc67381a66396c1",
+    "scraped_data": {
+        "myName": "Jay",
+        "theirName": "Krisan",
+        "theirProfile": "\nName: Krisan, Age: 27\nAbout Them:Genuine person.\nTheir Profile Prompts:\n- I’m happiest when: When I’m comfortable being authentically me with someone.\nTheir Basics & Interests:\nheight: 5' 1''; exercise: Active; education: Undergraduate degree; drinking: Socially; smoking: Never; gender: Woman; intentions: Relationship; familyplans: Want someday; religion: Christian",
+        "theirLocationString": null,
+        "conversationHistory": [
+            {
+                "role": "user",
+                "content": "I'm good, thanks! Just taking a break from work. How about you? 😊",
+                "date": "2025-08-05"
+            },
+            {
+                "role": "assistant",
+                "content": "I’m all great. Thanks. Just waking up. Where are you? You work so early. Haha",
+                "date": "2025-08-05"
+            },
+            {
+                "role": "user",
+                "content": "I'm in the US, so it's afternoon for me. 🌞 How's your morning going? 😊",
+                "date": "2025-08-05"
+            },
+            {
+                "role": "assistant",
+                "content": "Oh okay. Very near. Haha. All is well. Still in bed… I’ll wait my niece to wake up then I’m good to go. Haha. Reading your bio… it’s just so good. Haha",
+                "date": "2025-08-05"
+            },
+            {
+                "role": "user",
+                "content": "You must be a morning person! I can barely function before my second cup of coffee. 😜",
+                "date": "2025-08-05"
+            },
+            {
+                "role": "assistant",
+                "content": "Hahaha. Not so early though.. Early for me is like 4am. Hahaha. Depends also if I sleep early at night.. I can be an energizer for you. Haha",
+                "date": "2025-08-05"
+            },
+            {
+                "role": "user",
+                "content": "I can see why you're a morning person! You seem so put-together even when you're just waking up. 😜. You know, you have this natural charm that just draws people in. It's like you're a magnet for positivity. 😜. I’m always up for a little morning energy boost. What’s your favorite way to start the day? 😉",
+                "date": "2025-08-05"
+            },
+            {
+                "role": "assistant",
+                "content": "Hahaha. I can be… especially if I had a good night sleep… no snoring beside me. Hahaha. Do I? You do toooooo!!!. To start the day… I wanna smooochy smooochy kiss my niece. I like kissing cute kid’s cheeks.. I do pray first in the morning.. Clean.. Then I work out.. You?",
+                "date": "2025-08-05"
+            },
+            {
+                "role": "user",
+                "content": "I usually start my day with a quick jog and some coffee. It helps me clear my head and set a positive tone for the rest of the day.. I love the sound of your morning routine! Kissing your niece's cheeks sounds so sweet. What are your plans for the day, Krisan? 😏",
+                "date": "2025-08-05"
+            },
+            {
+                "role": "assistant",
+                "content": "Nice… I like that you like to work out. Haha. Yeah… I’ve been doing it for years till she pushed me away. Hahaha. Nothing much really.. I’m still looking for a new work.. You?",
+                "date": "2025-08-05"
+            },
+            {
+                "role": "user",
+                "content": "You're looking for a new job? That's great! Hope you find something that makes you happy and fulfilled. 🤞",
+                "date": "2025-08-05"
+            },
+            {
+                "role": "assistant",
+                "content": "I definitely will… appreciate that!!! Hihi. What do you do?",
+                "date": "2025-08-05"
+            },
+            {
+                "role": "user",
+                "content": "I'm a software engineer, but I'm always looking to learn new skills. How about you? What kind of work are you interested in? 😉",
+                "date": "2025-08-06"
+            },
+            {
+                "role": "assistant",
+                "content": "I have my degree in Hotel Management.. I used to work for a BPO company.. Now I’m exploring which company to work for.. You have great career btw.",
+                "date": "2025-08-06"
+            },
+            {
+                "role": "user",
+                "content": "I can imagine you'd be a natural in a role that involves a lot of interaction and making people feel welcome, like hospitality or customer service. You've got that warm, welcoming energy that puts people at ease. 🌟",
+                "date": "2025-08-06"
+            },
+            {
+                "role": "assistant",
+                "content": "I love that you put effort on making me feel great. Haha. I’m very much hospitable.. I can give you a warm welcome here also. Hahaha",
+                "date": "2025-08-06"
+            },
+            {
+                "role": "user",
+                "content": "I can see why people would love having you around! You've got that special something that makes everyone feel welcome and appreciated.",
+                "date": "2025-08-06"
+            },
+            {
+                "role": "assistant",
+                "content": "Would you love me to be around you? Haha",
+                "date": "2025-08-06"
+            },
+            {
+                "role": "user",
+                "content": "Of course! Your energy is contagious, and I think you'd make everyone around you happy and feel like they're home. So yeah, I'd love you to be around! 😊",
+                "date": "2025-08-07"
+            },
+            {
+                "role": "assistant",
+                "content": "Hihi. You’re too kind. But yes… I’m quite like that. Haha. Still here?",
+                "date": "2025-08-11"
+            }
+        ]
+    },
+    "ui_settings": {
+        "myLocation": "Auto-Detect Location",
+        "myProfile": "A fun-loving person looking for interesting conversations and seeing where things go.",
+        "local_model_name": "llama3:latest"
+    }
+},
+{
+    "matchId": "9aa535163f9b614bbb8034af7774fad797e4a6a52ab3c3ae1fc67381a66396c1",
+    "scraped_data": {
+        "myName": "Jay",
+        "theirName": "Krisan",
+        "theirProfile": "\nName: Krisan, Age: 27\nAbout Them:Genuine person.\nTheir Profile Prompts:\n- I’m happiest when: When I’m comfortable being authentically me with someone.\nTheir Basics & Interests:\nheight: 5' 1''; exercise: Active; education: Undergraduate degree; drinking: Socially; smoking: Never; gender: Woman; intentions: Relationship; familyplans: Want someday; religion: Christian",
+        "theirLocationString": null,
+        "conversationHistory": [
+            {
+                "role": "user",
+                "content": "I'm good, thanks! Just taking a break from work. How about you? 😊",
+                "date": "2025-08-05"
+            },
+            {
+                "role": "assistant",
+                "content": "I’m all great. Thanks. Just waking up. Where are you? You work so early. Haha",
+                "date": "2025-08-05"
+            },
+            {
+                "role": "user",
+                "content": "I'm in the US, so it's afternoon for me. 🌞 How's your morning going? 😊",
+                "date": "2025-08-05"
+            },
+            {
+                "role": "assistant",
+                "content": "Oh okay. Very near. Haha. All is well. Still in bed… I’ll wait my niece to wake up then I’m good to go. Haha. Reading your bio… it’s just so good. Haha",
+                "date": "2025-08-05"
+            },
+            {
+                "role": "user",
+                "content": "You must be a morning person! I can barely function before my second cup of coffee. 😜",
+                "date": "2025-08-05"
+            },
+            {
+                "role": "assistant",
+                "content": "Hahaha. Not so early though.. Early for me is like 4am. Hahaha. Depends also if I sleep early at night.. I can be an energizer for you. Haha",
+                "date": "2025-08-05"
+            },
+            {
+                "role": "user",
+                "content": "I can see why you're a morning person! You seem so put-together even when you're just waking up. 😜. You know, you have this natural charm that just draws people in. It's like you're a magnet for positivity. 😜. I’m always up for a little morning energy boost. What’s your favorite way to start the day? 😉",
+                "date": "2025-08-05"
+            },
+            {
+                "role": "assistant",
+                "content": "Hahaha. I can be… especially if I had a good night sleep… no snoring beside me. Hahaha. Do I? You do toooooo!!!. To start the day… I wanna smooochy smooochy kiss my niece. I like kissing cute kid’s cheeks.. I do pray first in the morning.. Clean.. Then I work out.. You?",
+                "date": "2025-08-05"
+            },
+            {
+                "role": "user",
+                "content": "I usually start my day with a quick jog and some coffee. It helps me clear my head and set a positive tone for the rest of the day.. I love the sound of your morning routine! Kissing your niece's cheeks sounds so sweet. What are your plans for the day, Krisan? 😏",
+                "date": "2025-08-05"
+            },
+            {
+                "role": "assistant",
+                "content": "Nice… I like that you like to work out. Haha. Yeah… I’ve been doing it for years till she pushed me away. Hahaha. Nothing much really.. I’m still looking for a new work.. You?",
+                "date": "2025-08-05"
+            },
+            {
+                "role": "user",
+                "content": "You're looking for a new job? That's great! Hope you find something that makes you happy and fulfilled. 🤞",
+                "date": "2025-08-05"
+            },
+            {
+                "role": "assistant",
+                "content": "I definitely will… appreciate that!!! Hihi. What do you do?",
+                "date": "2025-08-05"
+            },
+            {
+                "role": "user",
+                "content": "I'm a software engineer, but I'm always looking to learn new skills. How about you? What kind of work are you interested in? 😉",
+                "date": "2025-08-06"
+            },
+            {
+                "role": "assistant",
+                "content": "I have my degree in Hotel Management.. I used to work for a BPO company.. Now I’m exploring which company to work for.. You have great career btw.",
+                "date": "2025-08-06"
+            },
+            {
+                "role": "user",
+                "content": "I can imagine you'd be a natural in a role that involves a lot of interaction and making people feel welcome, like hospitality or customer service. You've got that warm, welcoming energy that puts people at ease. 🌟",
+                "date": "2025-08-06"
+            },
+            {
+                "role": "assistant",
+                "content": "I love that you put effort on making me feel great. Haha. I’m very much hospitable.. I can give you a warm welcome here also. Hahaha",
+                "date": "2025-08-06"
+            },
+            {
+                "role": "user",
+                "content": "I can see why people would love having you around! You've got that special something that makes everyone feel welcome and appreciated.",
+                "date": "2025-08-06"
+            },
+            {
+                "role": "assistant",
+                "content": "Would you love me to be around you? Haha",
+                "date": "2025-08-06"
+            },
+            {
+                "role": "user",
+                "content": "Of course! Your energy is contagious, and I think you'd make everyone around you happy and feel like they're home. So yeah, I'd love you to be around! 😊",
+                "date": "2025-08-07"
+            },
+            {
+                "role": "assistant",
+                "content": "Hihi. You’re too kind. But yes… I’m quite like that. Haha. Still here?",
+                "date": "2025-08-11"
+            }
+        ]
+    },
+    "ui_settings": {
+        "myLocation": "Auto-Detect Location",
+        "myProfile": "A fun-loving person looking for interesting conversations and seeing where things go.",
+        "local_model_name": "llama3:latest"
+    }
+},
+{
+    "matchId": "9aa535163f9b614bbb8034af7774fad797e4a6a52ab3c3ae1fc67381a66396c1",
+    "scraped_data": {
+        "myName": "Jay",
+        "theirName": "Krisan",
+        "theirProfile": "\nName: Krisan, Age: 27\nAbout Them:Genuine person.\nTheir Profile Prompts:\n- I’m happiest when: When I’m comfortable being authentically me with someone.\nTheir Basics & Interests:\nheight: 5' 1''; exercise: Active; education: Undergraduate degree; drinking: Socially; smoking: Never; gender: Woman; intentions: Relationship; familyplans: Want someday; religion: Christian",
+        "theirLocationString": null,
+        "conversationHistory": [
+            {
+                "role": "user",
+                "content": "I'm good, thanks! Just taking a break from work. How about you? 😊",
+                "date": "2025-08-05"
+            },
+            {
+                "role": "assistant",
+                "content": "I’m all great. Thanks. Just waking up. Where are you? You work so early. Haha",
+                "date": "2025-08-05"
+            },
+            {
+                "role": "user",
+                "content": "I'm in the US, so it's afternoon for me. 🌞 How's your morning going? 😊",
+                "date": "2025-08-05"
+            },
+            {
+                "role": "assistant",
+                "content": "Oh okay. Very near. Haha. All is well. Still in bed… I’ll wait my niece to wake up then I’m good to go. Haha. Reading your bio… it’s just so good. Haha",
+                "date": "2025-08-05"
+            },
+            {
+                "role": "user",
+                "content": "You must be a morning person! I can barely function before my second cup of coffee. 😜",
+                "date": "2025-08-05"
+            },
+            {
+                "role": "assistant",
+                "content": "Hahaha. Not so early though.. Early for me is like 4am. Hahaha. Depends also if I sleep early at night.. I can be an energizer for you. Haha",
+                "date": "2025-08-05"
+            },
+            {
+                "role": "user",
+                "content": "I can see why you're a morning person! You seem so put-together even when you're just waking up. 😜. You know, you have this natural charm that just draws people in. It's like you're a magnet for positivity. 😜. I’m always up for a little morning energy boost. What’s your favorite way to start the day? 😉",
+                "date": "2025-08-05"
+            },
+            {
+                "role": "assistant",
+                "content": "Hahaha. I can be… especially if I had a good night sleep… no snoring beside me. Hahaha. Do I? You do toooooo!!!. To start the day… I wanna smooochy smooochy kiss my niece. I like kissing cute kid’s cheeks.. I do pray first in the morning.. Clean.. Then I work out.. You?",
+                "date": "2025-08-05"
+            },
+            {
+                "role": "user",
+                "content": "I usually start my day with a quick jog and some coffee. It helps me clear my head and set a positive tone for the rest of the day.. I love the sound of your morning routine! Kissing your niece's cheeks sounds so sweet. What are your plans for the day, Krisan? 😏",
+                "date": "2025-08-05"
+            },
+            {
+                "role": "assistant",
+                "content": "Nice… I like that you like to work out. Haha. Yeah… I’ve been doing it for years till she pushed me away. Hahaha. Nothing much really.. I’m still looking for a new work.. You?",
+                "date": "2025-08-05"
+            },
+            {
+                "role": "user",
+                "content": "You're looking for a new job? That's great! Hope you find something that makes you happy and fulfilled. 🤞",
+                "date": "2025-08-05"
+            },
+            {
+                "role": "assistant",
+                "content": "I definitely will… appreciate that!!! Hihi. What do you do?",
+                "date": "2025-08-05"
+            },
+            {
+                "role": "user",
+                "content": "I'm a software engineer, but I'm always looking to learn new skills. How about you? What kind of work are you interested in? 😉",
+                "date": "2025-08-06"
+            },
+            {
+                "role": "assistant",
+                "content": "I have my degree in Hotel Management.. I used to work for a BPO company.. Now I’m exploring which company to work for.. You have great career btw.",
+                "date": "2025-08-06"
+            },
+            {
+                "role": "user",
+                "content": "I can imagine you'd be a natural in a role that involves a lot of interaction and making people feel welcome, like hospitality or customer service. You've got that warm, welcoming energy that puts people at ease. 🌟",
+                "date": "2025-08-06"
+            },
+            {
+                "role": "assistant",
+                "content": "I love that you put effort on making me feel great. Haha. I’m very much hospitable.. I can give you a warm welcome here also. Hahaha",
+                "date": "2025-08-06"
+            },
+            {
+                "role": "user",
+                "content": "I can see why people would love having you around! You've got that special something that makes everyone feel welcome and appreciated.",
+                "date": "2025-08-06"
+            },
+            {
+                "role": "assistant",
+                "content": "Would you love me to be around you? Haha",
+                "date": "2025-08-06"
+            },
+            {
+                "role": "user",
+                "content": "Of course! Your energy is contagious, and I think you'd make everyone around you happy and feel like they're home. So yeah, I'd love you to be around! 😊",
+                "date": "2025-08-07"
+            },
+            {
+                "role": "assistant",
+                "content": "Hihi. You’re too kind. But yes… I’m quite like that. Haha. Still here?",
+                "date": "2025-08-11"
+            }
+        ]
+    },
+    "ui_settings": {
+        "myLocation": "Auto-Detect Location",
+        "myProfile": "A fun-loving person looking for interesting conversations and seeing where things go.",
+        "local_model_name": "llama3:latest"
+    }
+},
+{
+    "matchId": "e0a23592830637874019cf8e16d2cd082f207dd494868effa26c4003bb936251",
+    "scraped_data": {
+        "myName": "Me",
+        "theirName": "Match",
+        "theirProfile": "Match profile not visible.",
+        "theirLocationString": null,
+        "conversationHistory": []
+    },
+    "ui_settings": {
+        "myLocation": "Auto-Detect Location",
+        "myProfile": "A fun-loving person looking for interesting conversations and seeing where things go.",
+        "local_model_name": "llama3:latest"
+    }
+},
+{
+    "matchId": "9aa535163f9b614bbb8034af7774fad797e4a6a52ab3c3ae1fc67381a66396c1",
+    "scraped_data": {
+        "myName": "Jay",
+        "theirName": "Krisan",
+        "theirProfile": "\nName: Krisan, Age: 27\nAbout Them:Genuine person.\nTheir Profile Prompts:\n- I’m happiest when: When I’m comfortable being authentically me with someone.\nTheir Basics & Interests:\nheight: 5' 1''; exercise: Active; education: Undergraduate degree; drinking: Socially; smoking: Never; gender: Woman; intentions: Relationship; familyplans: Want someday; religion: Christian",
+        "theirLocationString": null,
+        "conversationHistory": [
+            {
+                "role": "user",
+                "content": "I'm good, thanks! Just taking a break from work. How about you? 😊",
+                "date": "2025-08-05"
+            },
+            {
+                "role": "assistant",
+                "content": "I’m all great. Thanks. Just waking up. Where are you? You work so early. Haha",
+                "date": "2025-08-05"
+            },
+            {
+                "role": "user",
+                "content": "I'm in the US, so it's afternoon for me. 🌞 How's your morning going? 😊",
+                "date": "2025-08-05"
+            },
+            {
+                "role": "assistant",
+                "content": "Oh okay. Very near. Haha. All is well. Still in bed… I’ll wait my niece to wake up then I’m good to go. Haha. Reading your bio… it’s just so good. Haha",
+                "date": "2025-08-05"
+            },
+            {
+                "role": "user",
+                "content": "You must be a morning person! I can barely function before my second cup of coffee. 😜",
+                "date": "2025-08-05"
+            },
+            {
+                "role": "assistant",
+                "content": "Hahaha. Not so early though.. Early for me is like 4am. Hahaha. Depends also if I sleep early at night.. I can be an energizer for you. Haha",
+                "date": "2025-08-05"
+            },
+            {
+                "role": "user",
+                "content": "I can see why you're a morning person! You seem so put-together even when you're just waking up. 😜. You know, you have this natural charm that just draws people in. It's like you're a magnet for positivity. 😜. I’m always up for a little morning energy boost. What’s your favorite way to start the day? 😉",
+                "date": "2025-08-05"
+            },
+            {
+                "role": "assistant",
+                "content": "Hahaha. I can be… especially if I had a good night sleep… no snoring beside me. Hahaha. Do I? You do toooooo!!!. To start the day… I wanna smooochy smooochy kiss my niece. I like kissing cute kid’s cheeks.. I do pray first in the morning.. Clean.. Then I work out.. You?",
+                "date": "2025-08-05"
+            },
+            {
+                "role": "user",
+                "content": "I usually start my day with a quick jog and some coffee. It helps me clear my head and set a positive tone for the rest of the day.. I love the sound of your morning routine! Kissing your niece's cheeks sounds so sweet. What are your plans for the day, Krisan? 😏",
+                "date": "2025-08-05"
+            },
+            {
+                "role": "assistant",
+                "content": "Nice… I like that you like to work out. Haha. Yeah… I’ve been doing it for years till she pushed me away. Hahaha. Nothing much really.. I’m still looking for a new work.. You?",
+                "date": "2025-08-05"
+            },
+            {
+                "role": "user",
+                "content": "You're looking for a new job? That's great! Hope you find something that makes you happy and fulfilled. 🤞",
+                "date": "2025-08-05"
+            },
+            {
+                "role": "assistant",
+                "content": "I definitely will… appreciate that!!! Hihi. What do you do?",
+                "date": "2025-08-05"
+            },
+            {
+                "role": "user",
+                "content": "I'm a software engineer, but I'm always looking to learn new skills. How about you? What kind of work are you interested in? 😉",
+                "date": "2025-08-06"
+            },
+            {
+                "role": "assistant",
+                "content": "I have my degree in Hotel Management.. I used to work for a BPO company.. Now I’m exploring which company to work for.. You have great career btw.",
+                "date": "2025-08-06"
+            },
+            {
+                "role": "user",
+                "content": "I can imagine you'd be a natural in a role that involves a lot of interaction and making people feel welcome, like hospitality or customer service. You've got that warm, welcoming energy that puts people at ease. 🌟",
+                "date": "2025-08-06"
+            },
+            {
+                "role": "assistant",
+                "content": "I love that you put effort on making me feel great. Haha. I’m very much hospitable.. I can give you a warm welcome here also. Hahaha",
+                "date": "2025-08-06"
+            },
+            {
+                "role": "user",
+                "content": "I can see why people would love having you around! You've got that special something that makes everyone feel welcome and appreciated.",
+                "date": "2025-08-06"
+            },
+            {
+                "role": "assistant",
+                "content": "Would you love me to be around you? Haha",
+                "date": "2025-08-06"
+            },
+            {
+                "role": "user",
+                "content": "Of course! Your energy is contagious, and I think you'd make everyone around you happy and feel like they're home. So yeah, I'd love you to be around! 😊",
+                "date": "2025-08-07"
+            },
+            {
+                "role": "assistant",
+                "content": "Hihi. You’re too kind. But yes… I’m quite like that. Haha. Still here?",
+                "date": "2025-08-11"
+            }
+        ]
+    },
+    "ui_settings": {
+        "myLocation": "Auto-Detect Location",
+        "myProfile": "A fun-loving person looking for interesting conversations and seeing where things go.",
+        "local_model_name": "llama3:latest"
+    }
+},
+{
+    "matchId": "8cef006bd4412a6f80490dee8077f2c0bd61f141",
+    "scraped_data": {
+        "myName": "Jay",
+        "theirName": "Match",
+        "theirProfile": "Match profile not visible.",
+        "theirLocationString": "Not specified",
+        "conversationHistory": []
+    },
+    "ui_settings": {
+        "myLocation": "Auto-Detect Location",
+        "myProfile": "",
+        "local_model_name": "llama3:latest"
+    }
+}
