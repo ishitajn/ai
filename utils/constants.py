@@ -44,7 +44,8 @@ VULNERABLE_WORDS = [
 SEXUAL_WORDS = [
     "bed", "body", "craving", "cuddle", "desire", "dirty", "gorgeous", "hot", "kiss",
     "lips", "naughty", "pleasure", "sexy", "sheets", "skin", "spoil", "stunning",
-    "taste", "tease", "touch", "undress", "come over", "my place", "your place"
+    "taste", "tease", "touch", "undress", "come over", "my place", "your place",
+    "bra", "panties", "breast", "lingerie", "thong", "lace", "victoria secret"
 ]
 PLANNING_WORDS = ["when", "where", "what time", "let's", "we should", "free", "available", "schedule", "address", "number", "drinks", "coffee", "date"]
 GEO_TRIGGERS = {

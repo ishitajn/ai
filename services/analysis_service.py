@@ -148,11 +148,17 @@ def _update_memory_from_history(history: List[ScrapedConversationMessage], analy
     memory.investmentScore = max(-1, min(1, (memory.investmentScore * 0.8) + investment_delta))
 
     total_valence, tension_delta = 0, 0
-    for msg in match_messages:
-        total_valence += msg.subtext.valence
-        if "flirting_or_sexual" in msg.subtext.intents: tension_delta += 0.25
+    # Iterate over all messages to calculate tension
+    for msg in analyzed_messages:
+        if msg.role == 'assistant':
+            total_valence += msg.subtext.valence
+        if "flirting_or_sexual" in msg.subtext.intents:
+            tension_delta += 0.3 # Increased bonus
+
+    # Check for negative reaction to the last user message if it was flirty
     if user_messages and match_messages and "flirting_or_sexual" in user_messages[-1].subtext.intents and match_messages[-1].subtext.valence < -0.2:
         tension_delta -= 0.5
+
     memory.sexualTension = max(0, min(1, (memory.sexualTension * 0.85) + tension_delta))
     avg_valence = total_valence / len(match_messages) if match_messages else 0
     rapport_bonus = min(len(match_messages) / 10, 0.5)
