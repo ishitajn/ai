@@ -91,3 +91,43 @@ SHIT_TEST_PATTERNS = [
 SEXUAL_EMOJIS = re.compile(r"[😏😈🔥💦🥵😜😉💋👅🍑🍆🛏️🤤😇👀💅✨🫦]")
 AMBIGUOUS_PHRASES = ["im down", "sounds good", "maybe", "we should", "sometime"]
 SARCASTIC_MARKERS = ["yeah right", "sure...", "whatever", "obviously"]
+# --- Red Flag Detection ---
+RED_FLAGS = [
+    "my ex", "still friends with my ex", "still live with my ex",
+    "drama", "i hate drama", "no drama",
+    "crazy", "psycho", "insane",
+    "money problems", "i'm broke", "can you lend me",
+    "move on fast", "get attached quickly",
+    "looking for someone to take care of me",
+    "all my exes are crazy"
+]
+
+# --- Strategic Goal & Response Suggestion Constants ---
+SHIT_TEST_PATTERNS = [
+    r"i bet you say that to all",
+    r"are you a player",
+    r"you probably have so many",
+    r"don't break my heart",
+    r"are you trying to",
+    r"you must be",
+    r"\bslow down\b",
+    r"getting to know you",
+]
+POWER_MOVE_PHRASES = ["i'll let you know", "we'll see", "let me get back to you", "i'm busy"]
+
+# --- Date Analysis Constants ---
+DATE_KEYWORDS = {
+    "coffee": "coffee",
+    "drinks": "drinks",
+    "dinner": "dinner",
+    "walk": "walk",
+    "hike": "hike",
+    "movie": "movie",
+    "call": "virtual",
+    "video chat": "virtual"
+}
+COMMITMENT_LEVELS = {
+    "confirmed": ["i'm free", "see you then", "it's a date", "sounds perfect"],
+    "provisional": ["we should", "let's try", "maybe we can"],
+    "low": ["sometime", "maybe"]
+}

@@ -37,6 +37,9 @@ class PersonalityProfile(BaseModel):
 
 class MatchMemory(BaseModel):
     dateArcPhase: str = Field("rapport", description="Current phase: rapport, escalation, planning.")
+    rapportScore: float = Field(0.0, description="A score from 0 to 1 indicating connection strength.")
+    investmentScore: float = Field(0.0, description="A score from -1 to 1 quantifying their interest and effort.")
+    sexualTension: float = Field(0.0, description="A score from 0 to 1 quantifying explicit sexual communication.")
     topics: Dict[str, TopicDetails] = Field(default_factory=dict)
     insideJokes: List[str] = Field(default_factory=list)
     avoidedTopics: List[str] = Field(default_factory=list)
