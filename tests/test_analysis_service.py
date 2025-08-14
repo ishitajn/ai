@@ -10,7 +10,7 @@ def test_analyze_single_message_simple():
     """
     message_text = "This is a great message!"
     role = "user"
-    analysis = analyze_single_message(message_text, role)
+    analysis = analyze_single_message(message_text, role, date=None)
 
     assert analysis.content == message_text
     assert analysis.role == role
@@ -24,7 +24,7 @@ def test_analyze_single_message_question():
     """
     message_text = "What do you think?"
     role = "assistant"
-    analysis = analyze_single_message(message_text, role)
+    analysis = analyze_single_message(message_text, role, date=None)
 
     assert analysis.questionInfo.isQuestion
     assert analysis.questionInfo.type == "open"
@@ -35,6 +35,6 @@ def test_analyze_low_effort_message():
     """
     message_text = "lol"
     role = "assistant"
-    analysis = analyze_single_message(message_text, role)
+    analysis = analyze_single_message(message_text, role, date=None)
 
     assert analysis.isLowEffort

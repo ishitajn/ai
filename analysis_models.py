@@ -16,6 +16,7 @@ class QuestionInfo(BaseModel):
 class MessageAnalysis(BaseModel):
     content: str
     role: str
+    date: Optional[str] = None
     subtext: SubtextAnalysis
     questionInfo: QuestionInfo
     topics: List[str] = Field(default_factory=list)

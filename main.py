@@ -73,8 +73,7 @@ async def analyze_conversation(request: AnalysisRequest, db: Session = Depends(g
     based on smart defaults. This is the primary endpoint for a new session.
     """
     logger.info(f"Received analysis request for match: {request.matchId}")
-    with open('load.json', 'a+') as f:
-        f.write(',\n' +request.model_dump_json(indent=4))
+    logger.debug(f"Full analysis request payload: {request.model_dump_json()}")
 
     try:
         # Perform the full analysis
@@ -94,17 +93,13 @@ async def analyze_conversation(request: AnalysisRequest, db: Session = Depends(g
             scraped_data=request.scraped_data,
             ui_settings=applied_settings
         )
-        with open('analysis.json', 'a+') as f:
-            f.write(',\n' + FullApiResponse(
-                prompts=prompts,
-                full_analysis=analysis,
-                applied_ui_settings=applied_settings
-            ).model_dump_json(indent=4))
-        return FullApiResponse(
+        response_data = FullApiResponse(
             prompts=prompts,
             full_analysis=analysis,
             applied_ui_settings=applied_settings
         )
+        logger.debug(f"Full analysis response payload: {response_data.model_dump_json()}")
+        return response_data
     except Exception as e:
         logger.error(f"An error occurred during analysis for {request.matchId}: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=f"Internal Server Error: {e}")

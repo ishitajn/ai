@@ -2,6 +2,9 @@ import spacy
 import datetime
 import random
 import re
+import logging
+import subprocess
+import sys
 from typing import List, Dict, Tuple, Optional
 
 from spacy.matcher.dependencymatcher import defaultdict
@@ -24,13 +27,23 @@ from config import *
 from services.geo_service import update_geo_context
 
 # --- Initialization ---
-try:
-    nlp = spacy.load(SPACY_MODEL)
-except OSError:
-    print(f"Downloading '{SPACY_MODEL}' model for spaCy...")
-    from spacy.cli import download
-    download(SPACY_MODEL)
-    nlp = spacy.load(SPACY_MODEL)
+def _initialize_nlp():
+    """Loads the spaCy model, downloading it if necessary."""
+    try:
+        return spacy.load(SPACY_MODEL)
+    except OSError:
+        logging.info(f"SpaCy model '{SPACY_MODEL}' not found. Downloading...")
+        try:
+            # Use subprocess for a more reliable download
+            subprocess.check_call(
+                [sys.executable, "-m", "spacy", "download", SPACY_MODEL]
+            )
+            return spacy.load(SPACY_MODEL)
+        except subprocess.CalledProcessError as e:
+            logging.error(f"Failed to download spaCy model '{SPACY_MODEL}'. Please install it manually.")
+            raise e
+
+nlp = _initialize_nlp()
 
 # --- Main Service Functions ---
 
@@ -39,7 +52,7 @@ def run_full_conversation_analysis(db: Session, match_id: str, scraped_data: Scr
     The main entry point for a new analysis request. It orchestrates all sub-modules,
     builds a complete analysis object from scratch, and saves it to the database.
     """
-    analyzed_messages = [analyze_single_message(msg.content, msg.role) for msg in scraped_data.conversationHistory]
+    analyzed_messages = [analyze_single_message(msg.content, msg.role, msg.date) for msg in scraped_data.conversationHistory]
     user_messages = [m for m in analyzed_messages if m.role == 'user']
     match_messages = [m for m in analyzed_messages if m.role == 'assistant']
 
@@ -121,11 +134,11 @@ def get_initial_ui_settings(analysis: FullConversationAnalysis, initial_settings
 
 # --- Helper Functions for Analysis ---
 
-def analyze_single_message(text: str, role: str) -> MessageAnalysis:
-    if not text: return MessageAnalysis(content="", role=role, subtext=SubtextAnalysis(), questionInfo=QuestionInfo())
+def analyze_single_message(text: str, role: str, date: Optional[str]) -> MessageAnalysis:
+    if not text: return MessageAnalysis(content="", role=role, date=date, subtext=SubtextAnalysis(), questionInfo=QuestionInfo())
     doc = nlp(text)
     return MessageAnalysis(
-        content=text, role=role, subtext=_analyze_subtext(doc),
+        content=text, role=role, date=date, subtext=_analyze_subtext(doc),
         questionInfo=_analyze_question(doc), topics=_extract_topics_and_entities(doc)[0],
         keyEntities=_extract_topics_and_entities(doc)[1], isLowEffort=_is_low_effort(text, doc),
         wordCount=len([token for token in doc if token.is_alpha]),
@@ -181,7 +194,8 @@ def _determine_conversation_state_and_pacing(history: List[ScrapedConversationMe
             time_since = (datetime.datetime.now(datetime.timezone.utc) - last_date).total_seconds() / 3600
             if time_since < 1: pacing = "fast"
             elif time_since > 48: pacing = "stalled"
-        except (ValueError, TypeError): pass
+        except (ValueError, TypeError) as e:
+            logging.warning(f"Could not parse date for pacing calculation: '{last_message.date}'. Error: {e}")
     if last_message.role == "user": return "AWAITING_REPLY", pacing
     return "EARLY_CONVO" if sum(1 for m in history if m.role == 'assistant') < 4 else "ACTIVE_CONVO", pacing
 
@@ -218,7 +232,11 @@ def _update_memory_from_history(user_messages: List[MessageAnalysis], match_mess
     rapport_bonus = min(len(match_messages) / RAPPORT_CONVO_LENGTH_FACTOR, RAPPORT_CONVO_LENGTH_BONUS_MAX)
     memory.rapportScore = max(0, min(1, (avg_valence + 1) / 2 + rapport_bonus))
 
-    all_messages = sorted(user_messages + match_messages, key=lambda m: m.content)
+    # Sort all messages by date to process topics in chronological order
+    all_messages = sorted(
+        [m for m in (user_messages + match_messages) if m.date],
+        key=lambda m: m.date
+    )
     for msg in all_messages:
         message_doc = nlp(msg.content)
         for topic_text in msg.topics:
