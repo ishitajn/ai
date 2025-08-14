@@ -23,6 +23,7 @@ class DropdownConstraints(BaseModel):
 
 class BaseParameter(BaseModel):
     name: str
+    displayName: str
     description: str
     valueType: str
     defaultValue: Any
@@ -52,57 +53,57 @@ class ParameterGroup(BaseModel):
 
 def generate_all_options() -> List[ParameterGroup]:
     """
-    Generates the full, structured list of all configurable options.
+    Generates the full, structured list of all configurable options with user-friendly names and corrected UI types.
     """
-    ui_controls_group = ParameterGroup(
-        groupName="UI Controls",
-        groupDescription="Settings that directly control the generated message style and content.",
+    # --- Group 1: Core Controls ---
+    core_controls_group = ParameterGroup(
+        groupName="Core Controls",
+        groupDescription="The most important settings that define the style and strategy of the AI.",
         parameters=[
-            SliderParameter(
+            DropdownParameter(
+                name="strategyMode",
+                displayName="Strategy Mode",
+                uiType="segmented_control",
+                valueType="string",
+                description="Select the overall AI strategy, from cautious to aggressive.",
+                constraints=DropdownConstraints(allowedValues=[
+                    ConstraintValueOption(value=s, description=s) for s in constants.STRATEGY_MODES
+                ]),
+                defaultValue="Balanced",
+            ),
+            DropdownParameter(
                 name="flirtyValue",
-                uiType="slider",
+                displayName="Flirtiness",
+                uiType="dropdown",
                 valueType="integer",
-                description="Controls the level of flirtatiousness in the generated message, from polite and respectful to bold and suggestive.",
-                constraints=SliderConstraints(min=0, max=100, step=1),
+                description="Controls the level of flirtatiousness in the generated message.",
+                constraints=DropdownConstraints(allowedValues=[
+                    ConstraintValueOption(value=10, description="Polite and straightforward"),
+                    ConstraintValueOption(value=30, description="Friendly and approachable"),
+                    ConstraintValueOption(value=50, description="Lightly flirty and engaging"),
+                    ConstraintValueOption(value=70, description="Clearly flirty and playful"),
+                    ConstraintValueOption(value=90, description="Bold and sexually suggestive"),
+                ]),
                 defaultValue=config.DEFAULT_FLIRTY_VALUE,
             ),
-            SliderParameter(
+            DropdownParameter(
                 name="lengthValue",
-                uiType="slider",
+                displayName="Message Length",
+                uiType="dropdown",
                 valueType="integer",
                 description="Controls the target length of the generated message.",
-                constraints=SliderConstraints(min=0, max=100, step=1),
+                constraints=DropdownConstraints(allowedValues=[
+                    ConstraintValueOption(value=10, description="Very Short (1 sentence)"),
+                    ConstraintValueOption(value=30, description="Short (1-2 sentences)"),
+                    ConstraintValueOption(value=50, description="Medium (2-3 sentences)"),
+                    ConstraintValueOption(value=70, description="Long (4-5 sentences)"),
+                    ConstraintValueOption(value=90, description="Epic (6-7 sentences)"),
+                ]),
                 defaultValue=config.DEFAULT_LENGTH_VALUE,
             ),
             DropdownParameter(
-                name="linguisticStyle",
-                uiType="dropdown",
-                valueType="string",
-                description="Determines the linguistic style of the generated message.",
-                constraints=DropdownConstraints(
-                    allowedValues=[ConstraintValueOption(value=s, description=s.replace("_", " ").title()) for s in constants.LINGUISTIC_STYLES]
-                ),
-                defaultValue=config.DEFAULT_LINGUISTIC_STYLE,
-            ),
-            DropdownParameter(
-                name="humorStyle",
-                uiType="dropdown",
-                valueType="string",
-                description="Specify the exact type of humor to use.",
-                constraints=DropdownConstraints(
-                    allowedValues=[ConstraintValueOption(value=s, description=s.title()) for s in constants.HUMOR_STYLES]
-                ),
-                defaultValue=config.DEFAULT_HUMOR_STYLE,
-            ),
-            CheckboxParameter(
-                name="endWithQuestion",
-                uiType="checkbox",
-                valueType="boolean",
-                description="If checked, the generated message will end with a question to encourage a reply.",
-                defaultValue=config.DEFAULT_END_WITH_QUESTION,
-            ),
-            DropdownParameter(
                 name="persona",
+                displayName="AI Persona",
                 uiType="dropdown",
                 valueType="string",
                 description="Choose the conversational archetype the AI should embody.",
@@ -111,21 +112,47 @@ def generate_all_options() -> List[ParameterGroup]:
                 ),
                 defaultValue=config.DEFAULT_PERSONA,
             ),
+            CheckboxParameter(
+                name="endWithQuestion",
+                displayName="End with a Question",
+                uiType="checkbox",
+                valueType="boolean",
+                description="Ensure the message ends with a question to encourage a reply.",
+                defaultValue=config.DEFAULT_END_WITH_QUESTION,
+            ),
+        ]
+    )
+
+    # --- Group 2: Style & Voice ---
+    style_voice_group = ParameterGroup(
+        groupName="Style & Voice",
+        groupDescription="Fine-tune the specific voice and style of the AI's messages.",
+        parameters=[
             DropdownParameter(
-                name="ultimateGoal",
-                uiType="segmented_control",
+                name="linguisticStyle",
+                displayName="Linguistic Style",
+                uiType="dropdown",
                 valueType="string",
-                description="Select the primary objective for this conversation.",
+                description="Determines the specific linguistic flavor of the generated message.",
                 constraints=DropdownConstraints(
-                    allowedValues=[
-                        ConstraintValueOption(value="Date", description="The primary goal is to secure an in-person or virtual date."),
-                        ConstraintValueOption(value="Sexual_Encounter", description="The primary goal is to directly propose an in-person or virtual sexual encounter.")
-                    ]
+                    allowedValues=[ConstraintValueOption(value=s, description=s.replace("_", " ").title()) for s in constants.LINGUISTIC_STYLES]
                 ),
-                defaultValue=config.DEFAULT_ULTIMATE_GOAL,
+                defaultValue=config.DEFAULT_LINGUISTIC_STYLE,
+            ),
+            DropdownParameter(
+                name="humorStyle",
+                displayName="Humor Style",
+                uiType="dropdown",
+                valueType="string",
+                description="Specify the exact type of humor to use, if any.",
+                constraints=DropdownConstraints(
+                    allowedValues=[ConstraintValueOption(value=s, description=s.title()) for s in constants.HUMOR_STYLES]
+                ),
+                defaultValue=config.DEFAULT_HUMOR_STYLE,
             ),
             DropdownParameter(
                 name="emojiStrategy",
+                displayName="Emoji Strategy",
                 uiType="dropdown",
                 valueType="string",
                 description="Controls how emojis are used in the generated message.",
@@ -134,111 +161,76 @@ def generate_all_options() -> List[ParameterGroup]:
                 ),
                 defaultValue=config.DEFAULT_EMOJI_STRATEGY,
             ),
-            SliderParameter(
-                name="modelTemperature",
-                uiType="slider",
-                valueType="float",
-                description="Controls the creativity and randomness of the AI. Higher values mean more creative, lower values mean more predictable.",
-                constraints=SliderConstraints(min=0.1, max=1.5, step=0.05),
-                defaultValue=config.DEFAULT_MODEL_TEMPERATURE,
-            ),
-            SliderParameter(
-                name="topPValue",
-                uiType="slider",
-                valueType="float",
-                description="Controls the nucleus sampling probability. Only consider words comprising the top P probability mass.",
-                constraints=SliderConstraints(min=0.1, max=1.0, step=0.05),
-                defaultValue=config.DEFAULT_TOP_P_VALUE,
-            ),
-            TextParameter(
-                name="customInstruction",
-                uiType="text_input",
-                valueType="string",
-                description="Provide a specific, custom instruction for the AI to follow for the next message.",
-                defaultValue="",
-            ),
         ]
     )
 
-    analysis_overrides_group = ParameterGroup(
-        groupName="Analysis Overrides",
-        groupDescription="Manually override the AI's internal analysis scores and states. Use with caution.",
+    # --- Group 3: Overrides & Manual Control ---
+    overrides_group = ParameterGroup(
+        groupName="Overrides & Manual Control",
+        groupDescription="Manually override the AI's analysis or provide specific instructions.",
         parameters=[
+            TextParameter(
+                name="customInstruction",
+                displayName="Custom Instruction",
+                uiType="text_input",
+                valueType="string",
+                description="Provide a specific, one-time instruction for the AI to follow for the next message.",
+                defaultValue="",
+            ),
             SliderParameter(
                 name="investmentScore_override",
+                displayName="Force Investment Score",
                 uiType="slider",
                 valueType="float",
-                description="Manually override the AI's calculated investment score.",
+                description="Manually set the AI's calculated investment score. Affects strategy.",
                 constraints=SliderConstraints(min=-1.0, max=1.0, step=0.1),
                 defaultValue=None,
             ),
             SliderParameter(
                 name="rapportScore_override",
+                displayName="Force Rapport Score",
                 uiType="slider",
                 valueType="float",
-                description="Manually override the AI's calculated rapport score.",
+                description="Manually set the AI's calculated rapport score. Affects strategy.",
                 constraints=SliderConstraints(min=0.0, max=1.0, step=0.1),
                 defaultValue=None,
+            ),
+        ]
+    )
+
+    # --- Group 4: Advanced Settings (for Developers/Power Users) ---
+    advanced_group = ParameterGroup(
+        groupName="Advanced & Debug",
+        groupDescription="Fine-tune the core analysis engine and LLM parameters. Adjust with caution.",
+        parameters=[
+            SliderParameter(
+                name="modelTemperature",
+                displayName="Model Temperature",
+                uiType="slider",
+                valueType="float",
+                description="Controls the creativity and randomness of the AI. Higher is more creative.",
+                constraints=SliderConstraints(min=0.1, max=1.5, step=0.05),
+                defaultValue=config.DEFAULT_MODEL_TEMPERATURE,
             ),
             SliderParameter(
-                name="sexualTension_override",
+                name="INVESTMENT_SCORE_DECAY_FACTOR",
+                displayName="Investment Decay Factor",
                 uiType="slider",
                 valueType="float",
-                description="Manually override the AI's calculated sexual tension score.",
-                constraints=SliderConstraints(min=0.0, max=1.0, step=0.1),
-                defaultValue=None,
+                description="Rate at which investment score decays over time. Lower values mean faster decay.",
+                constraints=SliderConstraints(min=0.5, max=1, step=0.05),
+                defaultValue=config.INVESTMENT_SCORE_DECAY_FACTOR
             ),
-            CheckboxParameter(
-                name="isLongDistance_override",
-                uiType="checkbox",
-                valueType="boolean",
-                description="Manually override if the conversation is considered long distance.",
-                defaultValue=None,
+            SliderParameter(
+                name="PUSH_PULL_TRIGGER_PROBABILITY",
+                displayName="Push-Pull Trigger Probability",
+                uiType="slider",
+                valueType="float",
+                description="Probability of suggesting a 'Push-Pull' strategy when conditions are met.",
+                constraints=SliderConstraints(min=0, max=1, step=0.05),
+                defaultValue=config.PUSH_PULL_TRIGGER_PROBABILITY
             ),
         ]
     )
 
-    conversation_analysis_group = ParameterGroup(
-        groupName="Conversation Analysis Thresholds",
-        groupDescription="Advanced settings to fine-tune how the AI analyzes conversational dynamics. Adjust with caution.",
-        parameters=[
-            SliderParameter(name="INVESTMENT_SCORE_QUESTION_ASKED_BONUS", uiType="slider", valueType="float", description="Bonus for asking a question.", constraints=SliderConstraints(min=0, max=1, step=0.05), defaultValue=config.INVESTMENT_SCORE_QUESTION_ASKED_BONUS),
-            SliderParameter(name="INVESTMENT_SCORE_QUESTION_IGNORED_PENALTY", uiType="slider", valueType="float", description="Penalty for ignoring a question.", constraints=SliderConstraints(min=-1, max=0, step=0.05), defaultValue=config.INVESTMENT_SCORE_QUESTION_IGNORED_PENALTY),
-            SliderParameter(name="INVESTMENT_SCORE_LENGTH_MATCH_BONUS", uiType="slider", valueType="float", description="Bonus for matching message length.", constraints=SliderConstraints(min=0, max=1, step=0.05), defaultValue=config.INVESTMENT_SCORE_LENGTH_MATCH_BONUS),
-            SliderParameter(name="INVESTMENT_SCORE_LENGTH_MISMATCH_PENALTY", uiType="slider", valueType="float", description="Penalty for mismatched message length.", constraints=SliderConstraints(min=-1, max=0, step=0.05), defaultValue=config.INVESTMENT_SCORE_LENGTH_MISMATCH_PENALTY),
-            SliderParameter(name="INVESTMENT_SCORE_LOW_EFFORT_PENALTY", uiType="slider", valueType="float", description="Penalty for low-effort replies.", constraints=SliderConstraints(min=-1, max=0, step=0.05), defaultValue=config.INVESTMENT_SCORE_LOW_EFFORT_PENALTY),
-            SliderParameter(name="INVESTMENT_SCORE_DECAY_FACTOR", uiType="slider", valueType="float", description="Decay factor for investment score over time.", constraints=SliderConstraints(min=0.5, max=1, step=0.05), defaultValue=config.INVESTMENT_SCORE_DECAY_FACTOR),
-            SliderParameter(name="SEXUAL_TENSION_INTENT_BONUS", uiType="slider", valueType="float", description="Bonus for sexual intent.", constraints=SliderConstraints(min=0, max=1, step=0.05), defaultValue=config.SEXUAL_TENSION_INTENT_BONUS),
-            SliderParameter(name="SEXUAL_TENSION_NEGATIVE_REACTION_PENALTY", uiType="slider", valueType="float", description="Penalty for negative reaction to sexual intent.", constraints=SliderConstraints(min=-1, max=0, step=0.05), defaultValue=config.SEXUAL_TENSION_NEGATIVE_REACTION_PENALTY),
-            SliderParameter(name="SEXUAL_TENSION_DECAY_FACTOR", uiType="slider", valueType="float", description="Decay factor for sexual tension.", constraints=SliderConstraints(min=0.5, max=1, step=0.05), defaultValue=config.SEXUAL_TENSION_DECAY_FACTOR),
-            SliderParameter(name="RAPPORT_CONVO_LENGTH_BONUS_MAX", uiType="slider", valueType="float", description="Max bonus for conversation length.", constraints=SliderConstraints(min=0, max=1, step=0.05), defaultValue=config.RAPPORT_CONVO_LENGTH_BONUS_MAX),
-            SliderParameter(name="RAPPORT_CONVO_LENGTH_FACTOR", uiType="slider", valueType="integer", description="Factor for conversation length bonus.", constraints=SliderConstraints(min=1, max=50, step=1), defaultValue=config.RAPPORT_CONVO_LENGTH_FACTOR),
-            SliderParameter(name="TOPIC_STATUS_KEEP_THRESHOLD", uiType="slider", valueType="float", description="Sentiment threshold to keep a topic.", constraints=SliderConstraints(min=0, max=1, step=0.05), defaultValue=config.TOPIC_STATUS_KEEP_THRESHOLD),
-            SliderParameter(name="TOPIC_STATUS_AVOID_THRESHOLD", uiType="slider", valueType="float", description="Sentiment threshold to avoid a topic.", constraints=SliderConstraints(min=-1, max=0, step=0.05), defaultValue=config.TOPIC_STATUS_AVOID_THRESHOLD),
-        ]
-    )
-
-    strategic_goal_group = ParameterGroup(
-        groupName="Strategic Goal Engine Thresholds",
-        groupDescription="Thresholds that determine which strategic goal the AI should pursue.",
-        parameters=[
-            SliderParameter(name="DORMANT_INVESTMENT_THRESHOLD", uiType="slider", valueType="float", description="Investment score below which the conversation is considered dormant.", constraints=SliderConstraints(min=-1, max=0, step=0.05), defaultValue=config.DORMANT_INVESTMENT_THRESHOLD),
-            SliderParameter(name="LUKEWARM_INVESTMENT_THRESHOLD", uiType="slider", valueType="float", description="Investment score below which the conversation is lukewarm.", constraints=SliderConstraints(min=-0.5, max=0.5, step=0.05), defaultValue=config.LUKEWARM_INVESTMENT_THRESHOLD),
-            SliderParameter(name="ASK_RAPPORT_THRESHOLD", uiType="slider", valueType="float", description="Rapport threshold for asking for a date.", constraints=SliderConstraints(min=0, max=1, step=0.05), defaultValue=config.ASK_RAPPORT_THRESHOLD),
-            SliderParameter(name="ASK_INVESTMENT_THRESHOLD", uiType="slider", valueType="float", description="Investment threshold for asking for a date.", constraints=SliderConstraints(min=0, max=1, step=0.05), defaultValue=config.ASK_INVESTMENT_THRESHOLD),
-            SliderParameter(name="ASK_SEXUAL_TENSION_THRESHOLD", uiType="slider", valueType="float", description="Sexual tension threshold for proposing an encounter.", constraints=SliderConstraints(min=0, max=1, step=0.05), defaultValue=config.ASK_SEXUAL_TENSION_THRESHOLD),
-            SliderParameter(name="ESCALATE_RAPPORT_THRESHOLD", uiType="slider", valueType="float", description="Rapport threshold for escalating.", constraints=SliderConstraints(min=0, max=1, step=0.05), defaultValue=config.ESCALATE_RAPPORT_THRESHOLD),
-            SliderParameter(name="ESCALATE_INVESTMENT_THRESHOLD", uiType="slider", valueType="float", description="Investment threshold for escalating.", constraints=SliderConstraints(min=0, max=1, step=0.05), defaultValue=config.ESCALATE_INVESTMENT_THRESHOLD),
-            SliderParameter(name="PUSH_PULL_TRIGGER_PROBABILITY", uiType="slider", valueType="float", description="Probability of triggering a push-pull.", constraints=SliderConstraints(min=0, max=1, step=0.05), defaultValue=config.PUSH_PULL_TRIGGER_PROBABILITY),
-        ]
-    )
-
-    geo_analysis_group = ParameterGroup(
-        groupName="Geo-Analysis Configuration",
-        groupDescription="Settings related to geo-location analysis.",
-        parameters=[
-            SliderParameter(name="LONG_DISTANCE_THRESHOLD_KM", uiType="slider", valueType="integer", description="Distance in kilometers to be considered long distance.", constraints=SliderConstraints(min=1, max=500, step=1), defaultValue=config.LONG_DISTANCE_THRESHOLD_KM),
-        ]
-    )
-
-    return [ui_controls_group, analysis_overrides_group, conversation_analysis_group, strategic_goal_group, geo_analysis_group]
+    return [core_controls_group, style_voice_group, overrides_group, advanced_group]

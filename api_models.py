@@ -44,6 +44,7 @@ class FullUISettings(InitialUISettings):
     linguisticStyle: str = Field(default=DEFAULT_LINGUISTIC_STYLE)
     
     # Strategy
+    strategyMode: str = Field(default="Balanced")
     overrideGoal: Optional[str] = Field(default=None)
     endWithQuestion: bool = Field(default=DEFAULT_END_WITH_QUESTION)
     

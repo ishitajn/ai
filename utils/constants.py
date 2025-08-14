@@ -8,6 +8,7 @@ LINGUISTIC_STYLES = [
 HUMOR_STYLES = ["none", "witty", "sarcastic", "goofy", "dry", "self-deprecating"]
 EMOJI_STRATEGIES = ["auto", "none", "sparing", "heavy"]
 DATE_ARC_PHASES = ["rapport", "escalation", "planning", "post_date"]
+STRATEGY_MODES = ["Patient", "Balanced", "Aggressive"]
 
 # --- Word & Phrase Dictionaries for Analysis ---
 

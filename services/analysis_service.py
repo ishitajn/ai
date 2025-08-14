@@ -52,7 +52,11 @@ def run_full_conversation_analysis(db: Session, match_id: str, scraped_data: Scr
     last_match_msg = match_messages[-1] if match_messages else None
     state, pacing = _determine_conversation_state_and_pacing(scraped_data.conversationHistory, last_match_msg)
     
-    strategic_goal = _determine_strategic_goal(memory, last_match_msg, DEFAULT_ULTIMATE_GOAL)
+    # Note: When running a fresh analysis, we don't have FullUISettings yet,
+    # so we create a temporary one to pass to the goal determination.
+    # The initial goal will therefore always be based on the "Balanced" strategy.
+    temp_ui_settings = FullUISettings(**ui_settings.model_dump())
+    strategic_goal = _determine_strategic_goal(memory, last_match_msg, temp_ui_settings)
 
     analysis = FullConversationAnalysis(
         conversationState=state,
@@ -91,7 +95,7 @@ def load_and_apply_overrides(db: Session, match_id: str, ui_settings: FullUISett
         )
     else:
         analysis.strategicGoal = _determine_strategic_goal(
-            analysis.memory, analysis.lastMatchMessageAnalysis, ui_settings.ultimateGoal
+            analysis.memory, analysis.lastMatchMessageAnalysis, ui_settings
         )
     return analysis
 
@@ -238,28 +242,77 @@ def _categorize_topic(topic_text: str, message_doc: spacy.tokens.Doc) -> str:
     if any(token.lemma_ in GEO_TRIGGERS for token in message_doc): return "geo-context"
     return "general_interest"
 
-def _determine_strategic_goal(memory: MatchMemory, last_match_msg: Optional[MessageAnalysis], ultimate_goal: str) -> StrategicGoal:
-    if memory.investmentScore < DORMANT_INVESTMENT_THRESHOLD: memory.engagementState = "DORMANT"
-    elif DORMANT_INVESTMENT_THRESHOLD <= memory.investmentScore < LUKEWARM_INVESTMENT_THRESHOLD: memory.engagementState = "LUKEWARM"
-    else: memory.engagementState = "ACTIVE"
+STRATEGY_THRESHOLDS = {
+    "Patient": {
+        "ask_rapport": 0.8,
+        "ask_investment": 0.7,
+        "ask_sexual_tension": 0.75,
+        "escalate_rapport": 0.6,
+        "escalate_investment": 0.4,
+        "push_pull_probability": 0.15,
+    },
+    "Balanced": {
+        "ask_rapport": ASK_RAPPORT_THRESHOLD,
+        "ask_investment": ASK_INVESTMENT_THRESHOLD,
+        "ask_sexual_tension": ASK_SEXUAL_TENSION_THRESHOLD,
+        "escalate_rapport": ESCALATE_RAPPORT_THRESHOLD,
+        "escalate_investment": ESCALATE_INVESTMENT_THRESHOLD,
+        "push_pull_probability": PUSH_PULL_TRIGGER_PROBABILITY,
+    },
+    "Aggressive": {
+        "ask_rapport": 0.6,
+        "ask_investment": 0.4,
+        "ask_sexual_tension": 0.5,
+        "escalate_rapport": 0.4,
+        "escalate_investment": 0.15,
+        "push_pull_probability": 0.35,
+    }
+}
 
-    if last_match_msg and _detect_shit_test(last_match_msg.content): return StrategicGoal(type="MAINTAIN_FRAME", justification="A 'shit test' was detected. Respond with non-defensive humor and confidence.", urgency="critical")
-    if memory.engagementState == "DORMANT": return StrategicGoal(type="PROVIDE_STIMULUS", justification="They are unresponsive. Broadcast value with zero expectation of a reply.", urgency="low")
-    if memory.engagementState == "LUKEWARM": return StrategicGoal(type="ENCOURAGE_INTERACTION", justification="They are giving minimal responses. Make it easy for them to give a better answer.", urgency="normal")
-    if memory.dateArcPhase == "planning": return StrategicGoal(type="HANDLE_LOGISTICS", justification="A date is being planned. Focus on confirming details.", urgency="high")
+def _get_strategy_thresholds(strategy_mode: str) -> dict:
+    """Returns a dictionary of thresholds based on the selected strategy mode."""
+    return STRATEGY_THRESHOLDS.get(strategy_mode, STRATEGY_THRESHOLDS["Balanced"])
 
-    ask_conditions_met = memory.rapportScore > ASK_RAPPORT_THRESHOLD and memory.investmentScore > ASK_INVESTMENT_THRESHOLD
+
+def _determine_strategic_goal(memory: MatchMemory, last_match_msg: Optional[MessageAnalysis], ui_settings: FullUISettings) -> StrategicGoal:
+    """Determines the next strategic goal based on memory, context, and the selected strategy mode."""
+    thresholds = _get_strategy_thresholds(ui_settings.strategyMode)
+    ultimate_goal = ui_settings.ultimateGoal
+
+    if memory.investmentScore < DORMANT_INVESTMENT_THRESHOLD:
+        memory.engagementState = "DORMANT"
+    elif DORMANT_INVESTMENT_THRESHOLD <= memory.investmentScore < LUKEWARM_INVESTMENT_THRESHOLD:
+        memory.engagementState = "LUKEWARM"
+    else:
+        memory.engagementState = "ACTIVE"
+
+    if last_match_msg and _detect_shit_test(last_match_msg.content):
+        return StrategicGoal(type="MAINTAIN_FRAME", justification="A 'shit test' was detected. Respond with non-defensive humor and confidence.", urgency="critical")
+    if memory.engagementState == "DORMANT":
+        return StrategicGoal(type="PROVIDE_STIMULUS", justification="They are unresponsive. Broadcast value with zero expectation of a reply.", urgency="low")
+    if memory.engagementState == "LUKEWARM":
+        return StrategicGoal(type="ENCOURAGE_INTERACTION", justification="They are giving minimal responses. Make it easy for them to give a better answer.", urgency="normal")
+    if memory.dateArcPhase == "planning":
+        return StrategicGoal(type="HANDLE_LOGISTICS", justification="A date is being planned. Focus on confirming details.", urgency="high")
+
+    ask_conditions_met = memory.rapportScore > thresholds['ask_rapport'] and memory.investmentScore > thresholds['ask_investment']
     if ask_conditions_met:
         if ultimate_goal == "Sexual_Encounter":
-            if memory.sexualTension > ASK_SEXUAL_TENSION_THRESHOLD: return StrategicGoal(type="PROPOSE_ENCOUNTER", justification="Sexual tension and investment are very high. Propose an encounter.", urgency="high")
-            else: return StrategicGoal(type="ESCALATE_SEXUAL_TENSION", justification="Investment is high, but sexual tension is not yet sufficient. Escalate.", urgency="normal")
+            if memory.sexualTension > thresholds['ask_sexual_tension']:
+                return StrategicGoal(type="PROPOSE_ENCOUNTER", justification="Sexual tension and investment are very high. Propose an encounter.", urgency="high")
+            else:
+                return StrategicGoal(type="ESCALATE_SEXUAL_TENSION", justification="Investment is high, but sexual tension is not yet sufficient. Escalate.", urgency="normal")
         else:
-            if memory.isLongDistance: return StrategicGoal(type="PROPOSE_VIRTUAL_DATE", justification="Rapport and investment are high, but they are long distance. Propose a video call.", urgency="high")
-            else: return StrategicGoal(type="PROPOSE_DATE", justification="Rapport and investment are high and they are local. Ask for an in-person date.", urgency="high")
+            if memory.isLongDistance:
+                return StrategicGoal(type="PROPOSE_VIRTUAL_DATE", justification="Rapport and investment are high, but they are long distance. Propose a video call.", urgency="high")
+            else:
+                return StrategicGoal(type="PROPOSE_DATE", justification="Rapport and investment are high and they are local. Ask for an in-person date.", urgency="high")
 
-    if memory.rapportScore > ESCALATE_RAPPORT_THRESHOLD and memory.investmentScore > ESCALATE_INVESTMENT_THRESHOLD and random.random() < PUSH_PULL_TRIGGER_PROBABILITY:
-        return StrategicGoal(type="APPLY_PUSH_PULL", justification="The conversation is good but safe. Create a spark by mixing a compliment with a playful challenge.", urgency="normal")
-    if memory.rapportScore > ESCALATE_RAPPORT_THRESHOLD and memory.investmentScore > ESCALATE_INVESTMENT_THRESHOLD:
+    escalate_conditions_met = memory.rapportScore > thresholds['escalate_rapport'] and memory.investmentScore > thresholds['escalate_investment']
+    if escalate_conditions_met:
+        if random.random() < thresholds['push_pull_probability']:
+            return StrategicGoal(type="APPLY_PUSH_PULL", justification="The conversation is good but safe. Create a spark by mixing a compliment with a playful challenge.", urgency="normal")
+
         memory.dateArcPhase = "escalation"
         return StrategicGoal(type="ESCALATE_FLIRT", justification="Rapport is good and they are invested. Time to move from friendly to flirty.", urgency="normal")
 
