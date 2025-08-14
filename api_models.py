@@ -52,3 +52,4 @@ class FrontendAnalysisResponse(BaseModel):
     sexualAnalysis: SexualAnalysis
     responseSuggestions: ResponseSuggestions
     geoContext: GeoContext
+    analysisEngine: str = Field(..., description="The analysis engine used for the request, e.g., 'legacy_keyword' or 'enhanced_vader'.")

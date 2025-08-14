@@ -1,3 +1,4 @@
+import logging
 import spacy
 import datetime
 import random
@@ -31,6 +32,8 @@ from db import crud
 from config import *
 
 # --- Initialization ---
+logger = logging.getLogger(__name__)
+
 try:
     nlp = spacy.load(SPACY_MODEL)
 except OSError:
@@ -51,6 +54,10 @@ except Exception as e:
 # --- Main Service Function ---
 
 def run_full_conversation_analysis(db: Session, match_id: str, scraped_data: ScrapedData, ui_settings: UISettings) -> FullConversationAnalysis:
+    logger.debug(f"Starting full analysis for match_id: {match_id}")
+    logger.debug(f"Input Scraped Data: {scraped_data.model_dump_json(indent=2)}")
+    logger.debug(f"Input UI Settings: {ui_settings.model_dump_json(indent=2)}")
+
     history = scraped_data.conversationHistory
     analyzed_messages = [analyze_single_message(msg.content, msg.role, ui_settings.useEnhancedNlp) for msg in history]
     
@@ -77,6 +84,7 @@ def run_full_conversation_analysis(db: Session, match_id: str, scraped_data: Scr
     analysis.dateAnalysis = _get_date_analysis(analyzed_messages)
     analysis.sexualAnalysis = _get_sexual_analysis(analyzed_messages, memory)
 
+    logger.debug(f"Final analysis object: {analysis.model_dump_json(indent=2)}")
     return analysis
 
 # --- Pipeline Router & Core Message Analysis ---
@@ -144,7 +152,9 @@ def _update_memory_from_history(history: List[ScrapedConversationMessage], analy
         if last_match_msg.wordCount >= last_user_msg.wordCount * 0.8: investment_delta += 0.1
         else: investment_delta -= 0.1
         if last_match_msg.isLowEffort: investment_delta -= 0.3
+    logger.debug(f"Calculated investment delta: {investment_delta}")
     memory.investmentScore = max(-1, min(1, (memory.investmentScore * 0.8) + investment_delta))
+    logger.debug(f"Updated investment score: {memory.investmentScore}")
 
     total_valence, tension_delta = 0, 0
     for msg in analyzed_messages:
@@ -154,10 +164,14 @@ def _update_memory_from_history(history: List[ScrapedConversationMessage], analy
             tension_delta += 0.3
     if user_messages and match_messages and "flirting_or_sexual" in user_messages[-1].subtext.intents and match_messages[-1].subtext.valence < -0.2:
         tension_delta -= 0.5
+    logger.debug(f"Calculated sexual tension delta: {tension_delta}")
     memory.sexualTension = max(0, min(1, (memory.sexualTension * 0.85) + tension_delta))
+    logger.debug(f"Updated sexual tension: {memory.sexualTension}")
+
     avg_valence = total_valence / len(match_messages) if match_messages else 0
     rapport_bonus = min(len(match_messages) / 10, 0.5)
     memory.rapportScore = max(0, min(1, (avg_valence + 1) / 2 + rapport_bonus))
+    logger.debug(f"Calculated rapport score: {memory.rapportScore} (avg_valence: {avg_valence}, bonus: {rapport_bonus})")
 
     match_messages_text = " ".join([msg.content for msg in match_messages])
     if topic_classifier and match_messages_text:
@@ -186,6 +200,7 @@ def _update_memory_from_history(history: List[ScrapedConversationMessage], analy
         memory.topics[topic].score = max(-1, min(1, avg_sentiment + mention_bonus))
 
     memory.dateArcPhase = "rapport" # Simplified
+    logger.debug(f"Final memory object: {memory.model_dump_json(indent=2)}")
     return memory
 
 def _get_personality_profile(text: str) -> PersonalityProfile:
@@ -215,6 +230,7 @@ def _detect_red_flags(analyzed_messages: List[MessageAnalysis]) -> List[str]:
     return list(set(flags))
 
 def _get_geo_context(user_location_str: str, match_location_str: Optional[str], match_profile: str) -> GeoContext:
+    logger.debug(f"Getting geo context for user_location='{user_location_str}', match_location='{match_location_str}'")
     geo_context = GeoContext()
     user_loc, match_loc = None, None
     def _populate_location_context(location, context_obj):
@@ -249,9 +265,12 @@ def _get_geo_context(user_location_str: str, match_location_str: Optional[str], 
             match_offset = datetime.datetime.now(pytz.timezone(geo_context.matchLocation.timeZone)).utcoffset().total_seconds() / 3600
             geo_context.timeZoneDifference = int(user_offset - match_offset)
         geo_context.countryDifference = geo_context.userLocation.country != geo_context.matchLocation.country
+
+    logger.debug(f"Geo context result: {geo_context.model_dump_json(indent=2)}")
     return geo_context
 
 def _get_date_analysis(analyzed_messages: List[MessageAnalysis]) -> DateAnalysis:
+    logger.debug("Getting date analysis.")
     date_analysis = DateAnalysis()
     for msg in reversed(analyzed_messages):
         text_lower = msg.content.lower()
@@ -271,9 +290,11 @@ def _get_date_analysis(analyzed_messages: List[MessageAnalysis]) -> DateAnalysis
                 if ent.label_ in ("TIME", "DATE"): date_analysis.dateLogistics.time = ent.text
                 if ent.label_ in ("ORG", "FAC"): date_analysis.dateLogistics.venue = ent.text
             if date_analysis.dateCommitmentLevel != "none": break
+    logger.debug(f"Date analysis result: {date_analysis.model_dump_json(indent=2)}")
     return date_analysis
 
 def _get_sexual_analysis(analyzed_messages: List[MessageAnalysis], memory: MatchMemory) -> SexualAnalysis:
+    logger.debug("Getting sexual analysis.")
     sexual_analysis = SexualAnalysis()
     sexual_analysis.sexualTensionScore = memory.sexualTension
     match_sexual_intents = sum(1 for msg in analyzed_messages if msg.role == 'assistant' and "flirting_or_sexual" in msg.subtext.intents)
@@ -289,9 +310,11 @@ def _get_sexual_analysis(analyzed_messages: List[MessageAnalysis], memory: Match
     elif sexual_analysis.sexualTensionScore > 0.4: sexual_analysis.escalationPace = "moderate"
     else: sexual_analysis.escalationPace = "slow"
     sexual_analysis.sexualCommunicationStyle = "direct_and_explicit" if any(w in " ".join(m.content for m in analyzed_messages) for w in SEXUAL_WORDS) else "implicit"
+    logger.debug(f"Sexual analysis result: {sexual_analysis.model_dump_json(indent=2)}")
     return sexual_analysis
 
 def _get_response_suggestions(analysis: FullConversationAnalysis) -> ResponseSuggestions:
+    logger.debug("Getting response suggestions.")
     suggestions = ResponseSuggestions()
     memory = analysis.memory
     last_match_msg = analysis.lastMessageAnalysis
@@ -307,6 +330,7 @@ def _get_response_suggestions(analysis: FullConversationAnalysis) -> ResponseSug
         suggestions.keyTalkingPoints.append(f"Re-engage on a high-scoring topic like '{random.choice(high_score_topics)}'.")
     if memory.insideJokes:
         suggestions.keyTalkingPoints.append(f"Reference the inside joke about '{memory.insideJokes[-1]}'.")
+    logger.debug(f"Response suggestions result: {suggestions.model_dump_json(indent=2)}")
     return suggestions
 
 def _get_suggested_next_action(memory: MatchMemory, last_match_msg: Optional[MessageAnalysis]) -> str:
@@ -338,7 +362,35 @@ def _is_low_effort(text: str, doc: spacy.tokens.Doc) -> bool:
     return all(w.strip(".,!?-") in LOW_EFFORT_WORDS for w in text_clean.split())
 
 def _determine_conversation_state_and_pacing(history: List[ScrapedConversationMessage], last_match_analysis: Optional[MessageAnalysis]) -> Tuple[str, str]:
-    if not history: return "OPENER", "normal"
+    logger.debug("Determining conversation state.")
+    if not history:
+        logger.debug("No history, conversation state is OPENER.")
+        return "OPENER", "normal"
+
+    last_message = history[-1]
+
+    if last_message.role == 'user':
+        return "AWAITING_REPLY", "normal"
+
+    # If the last message is from the match (assistant)
+    if last_message.date:
+        try:
+            now = datetime.datetime.now(datetime.timezone.utc)
+            last_message_date = datetime.datetime.fromisoformat(last_message.date.replace("Z", "+00:00"))
+            time_since_last_message = now - last_message_date
+
+            if time_since_last_message.total_seconds() < 24 * 3600:
+                return "ACTIVE_CONVO", "normal"
+            elif time_since_last_message.total_seconds() < 72 * 3600:
+                return "STALLED", "slow"
+            else:
+                return "DEAD_CONVO", "stopped"
+        except (ValueError, TypeError, AttributeError):
+            # Fallback if date is invalid
+            return "ACTIVE_CONVO", "normal"
+
+    # Fallback if there's no date on the last message
+    logger.debug("No date on last message, falling back to ACTIVE_CONVO.")
     return "ACTIVE_CONVO", "normal"
 
 def _has_recent_greeting(history: List[ScrapedConversationMessage]) -> bool:
