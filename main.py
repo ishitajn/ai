@@ -11,7 +11,7 @@ from sqlalchemy.orm import Session
 from api_models import AnalysisRequest, RegenerationRequest, FullApiResponse
 from db.database import init_db, get_db
 from routers import options_router
-from services import analysis_service, prompt_service
+from services import analysis_service
 
 
 # --- App Lifecycle ---
@@ -66,8 +66,7 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
 async def analyze_conversation(request: AnalysisRequest, db: Session = Depends(get_db)):
     """
     Performs a full analysis of a conversation, saves the state to the database,
-    and returns the complete analysis object along with an initial set of prompts
-    based on smart defaults. This is the primary endpoint for a new session.
+    and returns the complete analysis object. This is the primary endpoint for a new session.
     """
     logger.info(f"Received analysis request for match: {request.matchId}")
     with open('load.json', 'a+') as f:
@@ -85,20 +84,12 @@ async def analyze_conversation(request: AnalysisRequest, db: Session = Depends(g
         # Generate smart defaults for the first prompt generation
         applied_settings = analysis_service.get_initial_ui_settings(analysis, request.ui_settings)
 
-        # Generate the initial prompts
-        prompts = prompt_service.generate_prompts(
-            analysis=analysis,
-            scraped_data=request.scraped_data,
-            ui_settings=applied_settings
-        )
         with open('analysis.json', 'a+') as f:
             f.write(',\n' + FullApiResponse(
-                prompts=prompts,
                 full_analysis=analysis,
                 applied_ui_settings=applied_settings
             ).model_dump_json(indent=4))
         return FullApiResponse(
-            prompts=prompts,
             full_analysis=analysis,
             applied_ui_settings=applied_settings
         )
@@ -108,9 +99,9 @@ async def analyze_conversation(request: AnalysisRequest, db: Session = Depends(g
 
 
 @app.post("/api/v1/regenerate", response_model=FullApiResponse)
-async def regenerate_prompts(request: RegenerationRequest, db: Session = Depends(get_db)):
+async def regenerate_analysis(request: RegenerationRequest, db: Session = Depends(get_db)):
     """
-    Regenerates prompts using a previously completed analysis (loaded from DB)
+    Regenerates analysis using a previously completed analysis (loaded from DB)
     but with new, user-provided UI settings and overrides. This is a lightweight
     operation for when the user adjusts a control.
     """
@@ -123,15 +114,7 @@ async def regenerate_prompts(request: RegenerationRequest, db: Session = Depends
             ui_settings=request.ui_settings
         )
 
-        # Generate new prompts with the overridden analysis and new settings
-        prompts = prompt_service.generate_prompts(
-            analysis=latest_analysis,
-            scraped_data=request.scraped_data,  # Scraped data is needed for context
-            ui_settings=request.ui_settings
-        )
-
         return FullApiResponse(
-            prompts=prompts,
             full_analysis=latest_analysis,
             applied_ui_settings=request.ui_settings  # Return the settings that were just applied
         )

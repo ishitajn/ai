@@ -108,7 +108,7 @@ def get_initial_ui_settings(analysis: FullConversationAnalysis, initial_settings
         'flirtyValue': DEFAULT_FLIRTY_VALUE, 'lengthValue': DEFAULT_LENGTH_VALUE,
         'linguisticStyle': DEFAULT_LINGUISTIC_STYLE, 'humorStyle': DEFAULT_HUMOR_STYLE,
         'vulnerabilityLevel': DEFAULT_VULNERABILITY_LEVEL, 'endWithQuestion': DEFAULT_END_WITH_QUESTION,
-        'persona': DEFAULT_PERSONA, 'ultimateGoal': DEFAULT_ULTIMATE_GOAL
+        'ultimateGoal': DEFAULT_ULTIMATE_GOAL
     }
     mem = analysis.memory
     last_match = analysis.lastMatchMessageAnalysis

@@ -4,7 +4,7 @@ from analysis_models import FullConversationAnalysis
 from config import (
     DEFAULT_FLIRTY_VALUE, DEFAULT_LENGTH_VALUE, DEFAULT_LINGUISTIC_STYLE,
     DEFAULT_HUMOR_STYLE, DEFAULT_VULNERABILITY_LEVEL, DEFAULT_END_WITH_QUESTION,
-    DEFAULT_PERSONA, DEFAULT_ULTIMATE_GOAL, DEFAULT_EMOJI_STRATEGY,
+    DEFAULT_ULTIMATE_GOAL, DEFAULT_EMOJI_STRATEGY,
     DEFAULT_MODEL_TEMPERATURE, DEFAULT_TOP_P_VALUE
 )
 
@@ -36,7 +36,6 @@ class FullUISettings(InitialUISettings):
     """
     # Core
     ultimateGoal: str = Field(default=DEFAULT_ULTIMATE_GOAL)
-    persona: str = Field(default=DEFAULT_PERSONA)
     
     # Style
     flirtyValue: int = Field(default=DEFAULT_FLIRTY_VALUE)
@@ -77,16 +76,7 @@ class RegenerationRequest(BaseModel):
     scraped_data: ScrapedData # Needed to rebuild context in prompts
     ui_settings: FullUISettings
 
-class PromptGenerationResponse(BaseModel):
-    """The structure for the 'prompts' object in the main API response."""
-    system_prompt: str
-    user_prompt: str
-    model_name: str
-    temperature: float
-    top_p: float
-
 class FullApiResponse(BaseModel):
     """The main response object for both /analyze and /regenerate."""
-    prompts: PromptGenerationResponse
     full_analysis: FullConversationAnalysis
     applied_ui_settings: FullUISettings

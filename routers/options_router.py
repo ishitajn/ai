@@ -3,7 +3,6 @@ from pydantic import BaseModel, Field
 from typing import List, Dict, Any, Literal, Union, Optional
 
 from utils.constants import LINGUISTIC_STYLES, HUMOR_STYLES, EMOJI_STRATEGIES
-from prompts.personas import PERSONAS
 
 router = APIRouter(
     prefix="/api/v1/options",
@@ -90,11 +89,6 @@ async def get_all_options():
                 ui_type="segmented_control", label="Ultimate Goal",
                 description="Select the primary objective for this conversation.",
                 options=[Option(**g) for g in ULTIMATE_GOALS_DATA]
-            ),
-            "persona": DropdownParameter(
-                ui_type="dropdown", label="Persona",
-                description="Choose the conversational archetype the AI should embody.",
-                options=[Option(key=k, name=v['name'], description=v['description']) for k, v in PERSONAS.items()]
             )
         }
     )
