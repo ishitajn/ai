@@ -5,3 +5,7 @@ geopy
 httpx
 python-dotenv
 pytz
+sqlalchemy
+vaderSentiment
+sentence-transformers
+torch

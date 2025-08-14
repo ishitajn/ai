@@ -1,0 +1,24 @@
+{
+  "matchId": "test-match-123",
+  "scraped_data": {
+    "myName": "Jules",
+    "theirName": "Alex",
+    "theirProfile": "Alex is an adventurous artist who loves hiking.",
+    "conversationHistory": [
+      {
+        "role": "assistant",
+        "content": "You seem really creative and fun!"
+      },
+      {
+        "role": "user",
+        "content": "Thanks! I do love to paint. What about you?"
+      }
+    ]
+  },
+  "ui_settings": {
+    "myLocation": "San Francisco, CA",
+    "myProfile": "I am a software engineer who loves to code.",
+    "local_model_name": "test_model",
+    "useEnhancedNlp": false
+  }
+}

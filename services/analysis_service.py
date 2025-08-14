@@ -11,6 +11,8 @@ from geopy.distance import great_circle
 from geopy.exc import GeocoderTimedOut, GeocoderUnavailable
 from timezonefinder import TimezoneFinder
 import pytz
+from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
+from transformers import pipeline
 
 from api_models import ScrapedData, FullUISettings, InitialUISettings, ScrapedConversationMessage
 from analysis_models import (
@@ -38,6 +40,12 @@ except OSError:
 
 geolocator = Nominatim(user_agent=GEOLOCATOR_USER_AGENT)
 tf = TimezoneFinder()
+vader_analyzer = SentimentIntensityAnalyzer()
+topic_classifier = None
+try:
+    topic_classifier = pipeline("zero-shot-classification", model="facebook/bart-large-mnli")
+except Exception as e:
+    print(f"Failed to load topic classifier model: {e}")
 
 # --- Main Service Functions ---
 
@@ -46,7 +54,7 @@ def run_full_conversation_analysis(db: Session, match_id: str, scraped_data: Scr
     The main entry point for a new analysis request. It orchestrates all sub-modules,
     builds a complete analysis object from scratch, and saves it to the database.
     """
-    analyzed_messages = [analyze_single_message(msg.content, msg.role) for msg in scraped_data.conversationHistory]
+    analyzed_messages = [analyze_single_message(msg.content, msg.role, ui_settings.useEnhancedNlp) for msg in scraped_data.conversationHistory]
     user_messages = [m for m in analyzed_messages if m.role == 'user']
     match_messages = [m for m in analyzed_messages if m.role == 'assistant']
 
@@ -124,17 +132,43 @@ def get_initial_ui_settings(analysis: FullConversationAnalysis, initial_settings
 
 # --- Helper Functions for Analysis ---
 
-def analyze_single_message(text: str, role: str) -> MessageAnalysis:
-    if not text: return MessageAnalysis(content="", role=role, subtext=SubtextAnalysis(), questionInfo=QuestionInfo())
+# --- Analysis Pipelines Router ---
+
+def analyze_single_message(text: str, role: str, use_enhanced_nlp: bool) -> MessageAnalysis:
+    """
+    Analyzes a single message using either the legacy or enhanced NLP pipeline,
+    based on the user's settings.
+    """
+    if not text:
+        return MessageAnalysis(content="", role=role, subtext=SubtextAnalysis(), questionInfo=QuestionInfo())
+
     doc = nlp(text)
+
+    # All pipelines get legacy topics and entities
+    topics, entities = _extract_topics_legacy(doc)
+    enhanced_topics = None
+
+    if use_enhanced_nlp:
+        subtext = _analyze_subtext_enhanced(doc)
+        enhanced_topics = _get_enhanced_topics(doc)
+    else:
+        subtext = _analyze_subtext_legacy(doc)
+
     return MessageAnalysis(
-        content=text, role=role, subtext=_analyze_subtext(doc),
-        questionInfo=_analyze_question(doc), topics=_extract_topics_and_entities(doc)[0],
-        keyEntities=_extract_topics_and_entities(doc)[1], isLowEffort=_is_low_effort(text, doc),
+        content=text,
+        role=role,
+        subtext=subtext,
+        questionInfo=_analyze_question(doc),
+        topics=topics,
+        keyEntities=entities,
+        isLowEffort=_is_low_effort(text, doc),
         wordCount=len([token for token in doc if token.is_alpha]),
+        enhancedTopics=enhanced_topics
     )
 
-def _analyze_subtext(doc: spacy.tokens.Doc) -> SubtextAnalysis:
+# --- Legacy Pipeline ---
+
+def _analyze_subtext_legacy(doc: spacy.tokens.Doc) -> SubtextAnalysis:
     text_lower = doc.text.lower()
     subtext = SubtextAnalysis(intents=[])
     valence, arousal = 0.0, 0.0
@@ -155,17 +189,127 @@ def _analyze_subtext(doc: spacy.tokens.Doc) -> SubtextAnalysis:
     subtext.intents = list(set(subtext.intents))
     return subtext
 
+def _extract_topics_legacy(doc: spacy.tokens.Doc) -> Tuple[List[str], Dict[str, List[str]]]:
+    topics = [c.text.lower() for c in doc.noun_chunks if len(c.text.split()) > 1 and not c.root.is_stop]
+    entities = defaultdict(list)
+    for ent in doc.ents: entities[ent.label_].append(ent.text)
+    return list(set(topics)), dict(entities)
+
+# --- Enhanced Pipeline (Placeholders) ---
+
+def _analyze_subtext_enhanced(doc: spacy.tokens.Doc) -> SubtextAnalysis:
+    """
+    Analyzes subtext using VADER for sentiment and then applies other classifiers.
+    """
+    # Start with the legacy analysis to get intents, sarcasm, etc.
+    subtext = _analyze_subtext_legacy(doc)
+
+    # --- VADER Sentiment Analysis ---
+    # VADER is better for short, informal text like chats.
+    vader_scores = vader_analyzer.polarity_scores(doc.text)
+    # Overwrite the legacy valence score with VADER's compound score.
+    subtext.valence = vader_scores['compound']
+    # VADER does not provide an arousal score, so we default it to 0 in the enhanced pipeline.
+    subtext.arousal = 0.0
+
+    # --- Enhanced Classifiers ---
+    subtext.communicationStyle = _get_communication_style(doc)
+    subtext.personalityTraits = _get_personality_traits(doc)
+    subtext.humorStyle = _get_humor_style(doc)
+
+    return subtext
+
+def _get_humor_style(doc: spacy.tokens.Doc) -> Optional[str]:
+    """
+    Uses a zero-shot classifier to identify the humor style.
+    """
+    if not topic_classifier:
+        return None
+
+    candidate_labels = ["witty", "sarcastic", "self-deprecating", "dry", "dark", "goofy", "pun-based", "no humor"]
+    try:
+        # multi_label=False because we want the single most likely style
+        result = topic_classifier(doc.text, candidate_labels, multi_label=False)
+        # Only return a style if it's not "no humor" and has a decent score
+        if result['labels'][0] != "no humor" and result['scores'][0] > 0.6:
+            return result['labels'][0]
+        return "none"
+    except Exception as e:
+        print(f"Error during humor style classification: {e}")
+        return None
+
+def _get_personality_traits(doc: spacy.tokens.Doc) -> Optional[Dict[str, float]]:
+    """
+    Uses a zero-shot classifier to get a score for each of the Big Five personality traits.
+    """
+    if not topic_classifier:
+        return None
+
+    trait_labels = {
+        "Openness": "language showing imagination, curiosity, and creativity",
+        "Conscientiousness": "language showing organization, discipline, and responsibility",
+        "Extraversion": "language showing sociability, energy, and assertiveness",
+        "Agreeableness": "language showing compassion, cooperation, and friendliness",
+        "Neuroticism": "language showing sensitivity, anxiety, and negative emotions"
+    }
+
+    try:
+        result = topic_classifier(doc.text, list(trait_labels.values()), multi_label=True)
+
+        # Create a mapping from descriptive label back to the trait name
+        label_to_trait = {v: k for k, v in trait_labels.items()}
+
+        trait_scores = {label_to_trait[label]: score for label, score in zip(result['labels'], result['scores'])}
+        return trait_scores
+    except Exception as e:
+        print(f"Error during personality trait classification: {e}")
+        return None
+
+def _get_communication_style(doc: spacy.tokens.Doc) -> Optional[str]:
+    """
+    Uses a zero-shot classifier to identify communication style.
+    """
+    if not topic_classifier:
+        return None
+
+    candidate_labels = ["Assertive", "Aggressive", "Passive", "Passive-Aggressive"]
+    try:
+        # multi_label=False because we want the single most likely style
+        result = topic_classifier(doc.text, candidate_labels, multi_label=False)
+        return result['labels'][0] if result['scores'][0] > 0.5 else "Mixed"
+    except Exception as e:
+        print(f"Error during communication style classification: {e}")
+        return None
+
+def _get_enhanced_topics(doc: spacy.tokens.Doc) -> Optional[List[str]]:
+    """
+    Uses a zero-shot classifier to identify topics from a predefined list.
+    """
+    if not topic_classifier:
+        return None
+
+    candidate_labels = [
+        'casual conversation', 'hobbies & interests', 'work life', 'school or education',
+        'travel & adventure', 'food & drink', 'health & fitness', 'family & friends',
+        'relationships & dating', 'jokes & humor', 'deep conversation', 'logistics & planning',
+        'compliments', 'flirting'
+    ]
+
+    try:
+        result = topic_classifier(doc.text, candidate_labels, multi_label=True)
+        # Return topics with a score above a certain threshold
+        return [label for label, score in zip(result['labels'], result['scores']) if score > 0.6]
+    except Exception as e:
+        print(f"Error during topic classification: {e}")
+        return None
+
+# --- Common Helper Functions ---
+
 def _analyze_question(doc: spacy.tokens.Doc) -> QuestionInfo:
     text_lower = doc.text.lower().strip()
     if text_lower.endswith('?'): return QuestionInfo(isQuestion=True, count=1, type="open" if doc[0].tag_ in ("WP", "WRB") else "closed")
     if any(text_lower.startswith(s) for s in INDIRECT_QUESTION_STARTERS): return QuestionInfo(isQuestion=True, count=1, type="indirect")
     return QuestionInfo()
-
-def _extract_topics_and_entities(doc: spacy.tokens.Doc) -> Tuple[List[str], Dict[str, List[str]]]:
-    topics = [c.text.lower() for c in doc.noun_chunks if len(c.text.split()) > 1 and not c.root.is_stop]
-    entities = defaultdict(list)
-    for ent in doc.ents: entities[ent.label_].append(ent.text)
-    return list(set(topics)), dict(entities)
 
 def _is_low_effort(text: str, doc: spacy.tokens.Doc) -> bool:
     text_clean = text.strip().lower()

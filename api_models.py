@@ -27,6 +27,7 @@ class InitialUISettings(BaseModel):
     myLocation: str
     myProfile: str
     local_model_name: str
+    useEnhancedNlp: bool = Field(default=False)
 
 class FullUISettings(InitialUISettings):
     """

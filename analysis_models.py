@@ -7,6 +7,10 @@ class SubtextAnalysis(BaseModel):
     intents: List[str] = Field(default_factory=list, description="Detected intents like 'questioning', 'planning', 'flirting'.")
     isSarcastic: bool = False
     isVulnerable: bool = False
+    # Enhanced NLP Fields
+    communicationStyle: Optional[str] = Field(None, description="Detected communication style (e.g., 'Assertive', 'Passive')")
+    humorStyle: Optional[str] = Field(None, description="Detected humor style (e.g., 'Witty', 'Sarcastic')")
+    personalityTraits: Optional[Dict[str, float]] = Field(None, description="Inferred Big Five personality traits with scores.")
 
 class QuestionInfo(BaseModel):
     isQuestion: bool = False
@@ -18,9 +22,11 @@ class MessageAnalysis(BaseModel):
     role: str
     subtext: SubtextAnalysis
     questionInfo: QuestionInfo
-    topics: List[str] = Field(default_factory=list)
+    topics: List[str] = Field(default_factory=list, description="Legacy topics from noun chunks.")
     keyEntities: Dict[str, List[str]] = Field(default_factory=dict)
     isLowEffort: bool = False
+    # Enhanced NLP Fields
+    enhancedTopics: Optional[List[str]] = Field(None, description="Advanced topics from keyword extraction model.")
     wordCount: int = 0
 
 class TopicDetails(BaseModel):

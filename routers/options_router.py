@@ -130,6 +130,11 @@ async def get_all_options():
         title="Power User & Debug",
         description="Advanced controls for fine-tuning the AI's behavior and analysis engine.",
         parameters={
+            "useEnhancedNlp": ToggleParameter(
+                ui_type="toggle", label="Use Enhanced NLP Models",
+                description="Enable slower, more powerful NLP models for analysis. May significantly increase processing time.",
+                default=False
+            ),
             "humorStyle": DropdownParameter(
                 ui_type="dropdown", label="Humor Style", description="Specify the exact type of humor to use.",
                 options=[Option(key=s, name=s.title(), description="") for s in HUMOR_STYLES]
