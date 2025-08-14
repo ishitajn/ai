@@ -1,4 +1,5 @@
 import logging
+import time
 from contextlib import asynccontextmanager
 
 import uvicorn
@@ -38,6 +39,16 @@ app = FastAPI(
     version="9.0.0",
     lifespan=lifespan
 )
+
+# --- Middlewares ---
+@app.middleware("http")
+async def add_process_time_header(request: Request, call_next):
+    start_time = time.time()
+    response = await call_next(request)
+    process_time = time.time() - start_time
+    response.headers["X-Process-Time"] = str(process_time)
+    logger.info(f"Request {request.method} {request.url.path} processed in {process_time:.4f}s")
+    return response
 
 app.add_middleware(
     CORSMiddleware,

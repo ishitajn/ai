@@ -89,10 +89,11 @@ class ResponseSuggestions(BaseModel):
     keyTalkingPoints: List[str] = Field(default_factory=list)
 
 class LocationContext(BaseModel):
-    lat: Optional[float] = None
-    lon: Optional[float] = None
-    timeZone: Optional[str] = None
+    address: Optional[str] = None
+    city: Optional[str] = None
+    state: Optional[str] = None
     country: Optional[str] = None
+    timeZone: Optional[str] = None
     timeOfDay: Optional[str] = None
 
 class GeoContext(BaseModel):
