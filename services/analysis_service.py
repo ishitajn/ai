@@ -17,7 +17,7 @@ from transformers import pipeline
 from api_models import ScrapedData, UISettings
 from analysis_models import (
     MessageAnalysis, SubtextAnalysis, QuestionInfo, FullConversationAnalysis, 
-    MatchMemory, TopicDetails, GeoContext, LocationContext
+    MatchMemory, TopicDetails, GeoContext, LocationContext, PersonalityProfile
 )
 from utils.constants import (
     POSITIVE_WORDS, NEGATIVE_WORDS, AROUSAL_WORDS, VULNERABLE_WORDS,
@@ -49,10 +49,6 @@ except Exception as e:
 # --- Main Service Function ---
 
 def run_full_conversation_analysis(db: Session, match_id: str, scraped_data: ScrapedData, ui_settings: UISettings) -> FullConversationAnalysis:
-    """
-    The main entry point for a new analysis request. It orchestrates all sub-modules
-    and builds the complete, final analysis object.
-    """
     history = scraped_data.conversationHistory
     analyzed_messages = [analyze_single_message(msg.content, msg.role, ui_settings.useEnhancedNlp) for msg in history]
     
@@ -74,9 +70,6 @@ def run_full_conversation_analysis(db: Session, match_id: str, scraped_data: Scr
         memory=memory,
         geoContext=geo_context
     )
-
-    # Note: Persisting the new complex object might require schema changes.
-    # crud.save_match_analysis(db, match_id, analysis)
 
     return analysis
 
