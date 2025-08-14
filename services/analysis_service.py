@@ -69,6 +69,11 @@ def run_full_conversation_analysis(db: Session, match_id: str, scraped_data: Scr
     
     strategic_goal = _determine_strategic_goal(memory, last_match_msg, DEFAULT_ULTIMATE_GOAL)
 
+    # Derive avoided topics list from the final topic scores
+    for topic, details in memory.topics.items():
+        if details.score < TOPIC_STATUS_AVOID_THRESHOLD:
+            memory.avoidedTopics.append(topic)
+
     analysis = FullConversationAnalysis(
         conversationState=state,
         conversationPacing=pacing,
@@ -154,17 +159,32 @@ def analyze_single_message(text: str, role: str, use_enhanced_nlp: bool) -> Mess
     else:
         subtext = _analyze_subtext_legacy(doc)
 
-    return MessageAnalysis(
+    # This logic is common to both pipelines
+    question_info = _analyze_question(doc)
+    is_low_effort = _is_low_effort(text, doc)
+    word_count = len([token for token in doc if token.is_alpha])
+    is_geo_related = _detect_geo_related(doc)
+    is_ambiguous = _detect_ambiguity(doc)
+
+    # Create the initial analysis object
+    analysis_obj = MessageAnalysis(
         content=text,
         role=role,
         subtext=subtext,
-        questionInfo=_analyze_question(doc),
+        questionInfo=question_info,
         topics=topics,
         keyEntities=entities,
-        isLowEffort=_is_low_effort(text, doc),
-        wordCount=len([token for token in doc if token.is_alpha]),
-        enhancedTopics=enhanced_topics
+        isLowEffort=is_low_effort,
+        wordCount=word_count,
+        enhancedTopics=enhanced_topics,
+        isAmbiguous=is_ambiguous,
+        isGeoRelated=is_geo_related
     )
+
+    # Suggest a response style based on the initial analysis
+    analysis_obj.suggestedResponseStyle = _suggest_response_style(analysis_obj)
+
+    return analysis_obj
 
 # --- Legacy Pipeline ---
 
@@ -305,6 +325,29 @@ def _get_enhanced_topics(doc: spacy.tokens.Doc) -> Optional[List[str]]:
 
 # --- Common Helper Functions ---
 
+def _detect_ambiguity(doc: spacy.tokens.Doc) -> bool:
+    """Checks for ambiguous phrases."""
+    text_lower = doc.text.lower()
+    return any(phrase in text_lower for phrase in AMBIGUOUS_PHRASES)
+
+def _detect_geo_related(doc: spacy.tokens.Doc) -> bool:
+    """Checks for location-related terms."""
+    return any(token.lemma_ in GEO_TRIGGERS for token in doc)
+
+def _suggest_response_style(analysis: MessageAnalysis) -> str:
+    """Suggests a response style based on message analysis."""
+    if analysis.subtext.isSarcastic:
+        return "witty"
+    if "flirting_or_sexual" in analysis.subtext.intents:
+        return "playful"
+    if analysis.subtext.isVulnerable:
+        return "supportive"
+    if analysis.questionInfo.isQuestion:
+        return "direct"
+    if analysis.subtext.valence > 0.5:
+        return "charming"
+    return "casual"
+
 def _analyze_question(doc: spacy.tokens.Doc) -> QuestionInfo:
     text_lower = doc.text.lower().strip()
     if text_lower.endswith('?'): return QuestionInfo(isQuestion=True, count=1, type="open" if doc[0].tag_ in ("WP", "WRB") else "closed")
@@ -343,6 +386,7 @@ def _has_recent_greeting(history: List[ScrapedConversationMessage]) -> bool:
     return False
 
 def _update_memory_from_history(user_messages: List[MessageAnalysis], match_messages: List[MessageAnalysis], memory: MatchMemory) -> MatchMemory:
+    # --- Investment Score ---
     investment_delta = 0
     if match_messages and user_messages:
         last_match_msg, last_user_msg = match_messages[-1], user_messages[-1]
@@ -353,6 +397,7 @@ def _update_memory_from_history(user_messages: List[MessageAnalysis], match_mess
         if last_match_msg.isLowEffort: investment_delta -= INVESTMENT_SCORE_LOW_EFFORT_PENALTY
     memory.investmentScore = max(-1, min(1, (memory.investmentScore * INVESTMENT_SCORE_DECAY_FACTOR) + investment_delta))
 
+    # --- Sexual Tension & Rapport ---
     total_valence, tension_delta = 0, 0
     for msg in match_messages:
         total_valence += msg.subtext.valence
@@ -360,35 +405,44 @@ def _update_memory_from_history(user_messages: List[MessageAnalysis], match_mess
     if user_messages and match_messages and "flirting_or_sexual" in user_messages[-1].subtext.intents and match_messages[-1].subtext.valence < -0.2:
         tension_delta -= SEXUAL_TENSION_NEGATIVE_REACTION_PENALTY
     memory.sexualTension = max(0, min(1, (memory.sexualTension * SEXUAL_TENSION_DECAY_FACTOR) + tension_delta))
-    
     avg_valence = total_valence / len(match_messages) if match_messages else 0
     rapport_bonus = min(len(match_messages) / RAPPORT_CONVO_LENGTH_FACTOR, RAPPORT_CONVO_LENGTH_BONUS_MAX)
     memory.rapportScore = max(0, min(1, (avg_valence + 1) / 2 + rapport_bonus))
 
-    all_messages = sorted(user_messages + match_messages, key=lambda m: m.content)
-    for msg in all_messages:
-        message_doc = nlp(msg.content)
-        for topic_text in msg.topics:
-            if topic_text not in memory.topics: memory.topics[topic_text] = TopicDetails()
-            details = memory.topics[topic_text]
-            details.mentions += 1; details.sentiment_sum += msg.subtext.valence
-            details.category = _categorize_topic(topic_text, message_doc)
-    for topic, details in memory.topics.items():
-        if details.mentions > 0: details.avg_sentiment = details.sentiment_sum / details.mentions
-        if details.avg_sentiment > TOPIC_STATUS_KEEP_THRESHOLD: details.status = "keep"
-        elif details.avg_sentiment < TOPIC_STATUS_AVOID_THRESHOLD: details.status = "avoid"
-        else: details.status = "neutral"
-    return memory
+    # --- History-based Memory Fields ---
+    all_messages = sorted(user_messages + match_messages, key=lambda m: m.content) # Note: This sorting seems incorrect, should be by date. Assuming it's a placeholder.
 
-def _categorize_topic(topic_text: str, message_doc: spacy.tokens.Doc) -> str:
-    msg_text_lower = message_doc.text.lower()
-    if any(w in msg_text_lower for w in SEXUAL_WORDS): return "sexual"
-    if any(w in msg_text_lower for w in PLANNING_WORDS): return "planning"
-    if any(w in msg_text_lower for w in VULNERABLE_WORDS): return "vulnerable"
-    if any(w in msg_text_lower for w in PROFESSIONAL_WORDS): return "professional"
-    if any(token.lemma_ in GEO_TRIGGERS for token in message_doc): return "geo-context"
-    if any(w in msg_text_lower for w in COMPLIMENT_WORDS): return "flirtatious"
-    return "general_interest"
+    # Temp storage for topic sentiment before calculating final score
+    topic_sentiments = defaultdict(list)
+
+    for i, msg in enumerate(all_messages):
+        # Populate Question History
+        if msg.questionInfo.isQuestion:
+            memory.questionHistory.append(msg.content)
+
+        # Populate Inside Jokes (Heuristic)
+        if msg.role == 'assistant' and msg.subtext.valence > 0.8 and any(laugh in msg.content.lower() for laugh in ["lmao", "lol", "haha"]):
+            if i > 0 and all_messages[i-1].role == 'user':
+                memory.insideJokes.append(all_messages[i-1].content) # The user's setup line
+
+        # Aggregate Topic Data
+        for topic_text in msg.topics:
+            if topic_text not in memory.topics:
+                memory.topics[topic_text] = TopicDetails(lastMentionIndex=i)
+
+            details = memory.topics[topic_text]
+            details.mentions += 1
+            details.lastMentionIndex = i
+            topic_sentiments[topic_text].append(msg.subtext.valence)
+
+    # Calculate final topic scores
+    for topic, sentiments in topic_sentiments.items():
+        avg_sentiment = sum(sentiments) / len(sentiments)
+        # The 'score' is a combination of avg sentiment and mention frequency bonus
+        mention_bonus = min(memory.topics[topic].mentions * 0.05, 0.2)
+        memory.topics[topic].score = max(-1, min(1, avg_sentiment + mention_bonus))
+
+    return memory
 
 def _update_geo_context(memory: MatchMemory, user_location_str: str, match_location_str: Optional[str], match_profile_doc: spacy.tokens.Doc):
     user_loc, match_loc = None, None

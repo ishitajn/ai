@@ -8,7 +8,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
 
-from api_models import AnalysisRequest, RegenerationRequest, FullApiResponse
+from api_models import AnalysisRequest, RegenerationRequest, FullApiResponse, FrontendAnalysisResponse
 from db.database import init_db, get_db
 from routers import options_router
 from services import analysis_service
@@ -62,16 +62,13 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
 
 
 # --- API Endpoints ---
-@app.post("/api/v1/analyze", response_model=FullApiResponse)
+@app.post("/api/v1/analyze", response_model=FrontendAnalysisResponse)
 async def analyze_conversation(request: AnalysisRequest, db: Session = Depends(get_db)):
     """
     Performs a full analysis of a conversation, saves the state to the database,
-    and returns the complete analysis object. This is the primary endpoint for a new session.
+    and returns a response tailored for the frontend.
     """
     logger.info(f"Received analysis request for match: {request.matchId}")
-    with open('load.json', 'a+') as f:
-        f.write(',\n' +request.model_dump_json(indent=4))
-
     try:
         # Perform the full analysis
         analysis = analysis_service.run_full_conversation_analysis(
@@ -81,42 +78,39 @@ async def analyze_conversation(request: AnalysisRequest, db: Session = Depends(g
             ui_settings=request.ui_settings
         )
 
-        # Generate smart defaults for the first prompt generation
-        applied_settings = analysis_service.get_initial_ui_settings(analysis, request.ui_settings)
-
-        with open('analysis.json', 'a+') as f:
-            f.write(',\n' + FullApiResponse(
-                full_analysis=analysis,
-                applied_ui_settings=applied_settings
-            ).model_dump_json(indent=4))
-        return FullApiResponse(
-            full_analysis=analysis,
-            applied_ui_settings=applied_settings
+        # Map the full analysis to the frontend-specific response model
+        return FrontendAnalysisResponse(
+            conversationState=analysis.conversationState,
+            suppressGreeting=analysis.suppressGreeting,
+            lastMessageAnalysis=analysis.lastMatchMessageAnalysis,
+            memory=analysis.memory
         )
     except Exception as e:
         logger.error(f"An error occurred during analysis for {request.matchId}: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=f"Internal Server Error: {e}")
 
 
-@app.post("/api/v1/regenerate", response_model=FullApiResponse)
+@app.post("/api/v1/regenerate", response_model=FrontendAnalysisResponse)
 async def regenerate_analysis(request: RegenerationRequest, db: Session = Depends(get_db)):
     """
     Regenerates analysis using a previously completed analysis (loaded from DB)
-    but with new, user-provided UI settings and overrides. This is a lightweight
-    operation for when the user adjusts a control.
+    but with new, user-provided UI settings and overrides.
     """
     logger.info(f"Received regeneration request for match: {request.matchId}")
     try:
-        # Load the latest analysis from the database
+        # Load the latest analysis from the database and apply overrides
         latest_analysis = analysis_service.load_and_apply_overrides(
             db=db,
             match_id=request.matchId,
             ui_settings=request.ui_settings
         )
 
-        return FullApiResponse(
-            full_analysis=latest_analysis,
-            applied_ui_settings=request.ui_settings  # Return the settings that were just applied
+        # Map the updated analysis to the frontend-specific response model
+        return FrontendAnalysisResponse(
+            conversationState=latest_analysis.conversationState,
+            suppressGreeting=latest_analysis.suppressGreeting,
+            lastMessageAnalysis=latest_analysis.lastMatchMessageAnalysis,
+            memory=latest_analysis.memory
         )
     except Exception as e:
         logger.error(f"An error occurred during regeneration for {request.matchId}: {e}", exc_info=True)

@@ -28,15 +28,15 @@ class MessageAnalysis(BaseModel):
     # Enhanced NLP Fields
     enhancedTopics: Optional[List[str]] = Field(None, description="Advanced topics from keyword extraction model.")
     wordCount: int = 0
+    # New fields for Frontend Requirements
+    isAmbiguous: bool = False
+    isGeoRelated: bool = False
+    suggestedResponseStyle: Optional[str] = None
 
 class TopicDetails(BaseModel):
+    score: float = Field(0.0, description="A calculated score representing the topic's importance or sentiment.")
     mentions: int = 0
-    sentiment_sum: float = 0.0
-    arousal_sum: float = 0.0
-    avg_sentiment: float = 0.0
-    status: str = Field("neutral", description="e.g., 'keep', 'avoid', 'neutral'.")
-    category: str = Field("general_interest", description="e.g., 'flirtatious', 'sexual', 'vulnerable', 'planning'.")
-    last_mentioned_date: Optional[str] = None
+    lastMentionIndex: int = Field(..., description="The index of the last message where this topic was mentioned.")
 
 class MatchMemory(BaseModel):
     dateArcPhase: str = Field("rapport", description="Current phase: rapport, escalation, planning.")
@@ -51,6 +51,10 @@ class MatchMemory(BaseModel):
     isLongDistance: bool = False
     topics: Dict[str, TopicDetails] = Field(default_factory=dict)
     keyFacts: Dict[str, Any] = Field(default_factory=dict)
+    # New fields for Frontend Requirements
+    insideJokes: List[str] = Field(default_factory=list)
+    avoidedTopics: List[str] = Field(default_factory=list)
+    questionHistory: List[str] = Field(default_factory=list)
 
 class StrategicGoal(BaseModel):
     type: str = Field("BUILD_RAPPORT", description="e.g., BUILD_RAPPORT, PROPOSE_DATE, ENCOURAGE_INTERACTION.")

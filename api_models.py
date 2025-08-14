@@ -1,6 +1,6 @@
 from pydantic import BaseModel, Field
 from typing import List, Optional, Dict, Any
-from analysis_models import FullConversationAnalysis
+from analysis_models import FullConversationAnalysis, MessageAnalysis, MatchMemory
 from config import (
     DEFAULT_FLIRTY_VALUE, DEFAULT_LENGTH_VALUE, DEFAULT_LINGUISTIC_STYLE,
     DEFAULT_HUMOR_STYLE, DEFAULT_VULNERABILITY_LEVEL, DEFAULT_END_WITH_QUESTION,
@@ -81,3 +81,12 @@ class FullApiResponse(BaseModel):
     """The main response object for both /analyze and /regenerate."""
     full_analysis: FullConversationAnalysis
     applied_ui_settings: FullUISettings
+
+class FrontendAnalysisResponse(BaseModel):
+    """
+    A tailored response object that provides the specific fields required by the frontend.
+    """
+    conversationState: str
+    suppressGreeting: bool
+    lastMessageAnalysis: Optional[MessageAnalysis] = None
+    memory: MatchMemory
