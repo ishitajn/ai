@@ -210,26 +210,49 @@ def _has_recent_greeting(history: List[ScrapedConversationMessage]) -> bool:
     return False
 
 def _update_memory_from_history(user_messages: List[MessageAnalysis], match_messages: List[MessageAnalysis], memory: MatchMemory) -> MatchMemory:
-    investment_delta = 0
-    if match_messages and user_messages:
-        last_match_msg, last_user_msg = match_messages[-1], user_messages[-1]
-        if last_match_msg.questionInfo.isQuestion: investment_delta += INVESTMENT_SCORE_QUESTION_ASKED_BONUS
-        if last_user_msg.questionInfo.isQuestion and not last_match_msg.questionInfo.isQuestion: investment_delta -= INVESTMENT_SCORE_QUESTION_IGNORED_PENALTY
-        if last_match_msg.wordCount >= last_user_msg.wordCount * 0.8: investment_delta += INVESTMENT_SCORE_LENGTH_MATCH_BONUS
-        else: investment_delta -= INVESTMENT_SCORE_LENGTH_MISMATCH_PENALTY
-        if last_match_msg.isLowEffort: investment_delta -= INVESTMENT_SCORE_LOW_EFFORT_PENALTY
-    memory.investmentScore = max(-1, min(1, (memory.investmentScore * INVESTMENT_SCORE_DECAY_FACTOR) + investment_delta))
+    # This function has been significantly refactored to be more holistic and mutual.
 
+    all_analyzed_messages = user_messages + match_messages
+
+    # --- Investment Score Calculation (Refactored) ---
+    # We now calculate a raw score based on the entire history, then scale it.
+    raw_investment_score = 0
+    for i, msg in enumerate(all_analyzed_messages):
+        # Longer messages get more points
+        raw_investment_score += (msg.wordCount / 50.0)
+        # Asking questions is a strong investment indicator
+        if msg.questionInfo.isQuestion:
+            raw_investment_score += 0.5
+        # Responding to a question is also an investment
+        if i > 0 and all_analyzed_messages[i-1].questionInfo.isQuestion:
+            raw_investment_score += 0.5
+        # Low effort messages are penalized
+        if msg.isLowEffort:
+            raw_investment_score -= 1.0
+
+    # Normalize the score to a -1 to 1 range.
+    # The scaling factor is heuristic, assuming an average of 10 messages.
+    # A "neutral" conversation should hover around 0.
+    scaling_factor = len(all_analyzed_messages) if all_analyzed_messages else 10
+    normalized_investment = raw_investment_score / scaling_factor
+    # Apply a decay factor to the existing score and blend it with the new calculation
+    new_investment_score = (memory.investmentScore * INVESTMENT_SCORE_DECAY_FACTOR) + normalized_investment
+    memory.investmentScore = max(-1, min(1, new_investment_score))
+
+    # --- Sexual Tension & Rapport Calculation (Refactored) ---
     total_valence, tension_delta = 0, 0
-    for msg in match_messages:
+    for msg in all_analyzed_messages:
         total_valence += msg.subtext.valence
-        if "flirting_or_sexual" in msg.subtext.intents: tension_delta += SEXUAL_TENSION_INTENT_BONUS
+        if msg.role == 'assistant' and "flirting_or_sexual" in msg.subtext.intents:
+            tension_delta += SEXUAL_TENSION_INTENT_BONUS
+
     if user_messages and match_messages and "flirting_or_sexual" in user_messages[-1].subtext.intents and match_messages[-1].subtext.valence < -0.2:
         tension_delta -= SEXUAL_TENSION_NEGATIVE_REACTION_PENALTY
     memory.sexualTension = max(0, min(1, (memory.sexualTension * SEXUAL_TENSION_DECAY_FACTOR) + tension_delta))
     
-    avg_valence = total_valence / len(match_messages) if match_messages else 0
-    rapport_bonus = min(len(match_messages) / RAPPORT_CONVO_LENGTH_FACTOR, RAPPORT_CONVO_LENGTH_BONUS_MAX)
+    # Rapport is mutual, so it should be based on the sentiment of all messages and the length of the whole conversation.
+    avg_valence = total_valence / len(all_analyzed_messages) if all_analyzed_messages else 0
+    rapport_bonus = min(len(all_analyzed_messages) / RAPPORT_CONVO_LENGTH_FACTOR, RAPPORT_CONVO_LENGTH_BONUS_MAX)
     memory.rapportScore = max(0, min(1, (avg_valence + 1) / 2 + rapport_bonus))
 
     # Sort all messages by date to process topics in chronological order
@@ -240,10 +263,14 @@ def _update_memory_from_history(user_messages: List[MessageAnalysis], match_mess
     for msg in all_messages:
         message_doc = nlp(msg.content)
         for topic_text in msg.topics:
-            if topic_text not in memory.topics: memory.topics[topic_text] = TopicDetails()
+            if topic_text not in memory.topics:
+                memory.topics[topic_text] = TopicDetails()
+                # Categorize the topic only when it's first discovered
+                memory.topics[topic_text].category = _categorize_topic(topic_text, message_doc)
+
             details = memory.topics[topic_text]
-            details.mentions += 1; details.sentiment_sum += msg.subtext.valence
-            details.category = _categorize_topic(topic_text, message_doc)
+            details.mentions += 1
+            details.sentiment_sum += msg.subtext.valence
     for topic, details in memory.topics.items():
         if details.mentions > 0: details.avg_sentiment = details.sentiment_sum / details.mentions
         if details.avg_sentiment > TOPIC_STATUS_KEEP_THRESHOLD: details.status = "keep"
@@ -297,6 +324,10 @@ def _determine_strategic_goal(memory: MatchMemory, last_match_msg: Optional[Mess
     thresholds = _get_strategy_thresholds(ui_settings.strategyMode)
     ultimate_goal = ui_settings.ultimateGoal
 
+    # Reset date arc phase if conditions are no longer met
+    if memory.dateArcPhase == "escalation" and (memory.rapportScore < thresholds['escalate_rapport'] or memory.investmentScore < thresholds['escalate_investment']):
+        memory.dateArcPhase = "rapport"
+
     if memory.investmentScore < DORMANT_INVESTMENT_THRESHOLD:
         memory.engagementState = "DORMANT"
     elif DORMANT_INVESTMENT_THRESHOLD <= memory.investmentScore < LUKEWARM_INVESTMENT_THRESHOLD:
@@ -328,7 +359,8 @@ def _determine_strategic_goal(memory: MatchMemory, last_match_msg: Optional[Mess
 
     escalate_conditions_met = memory.rapportScore > thresholds['escalate_rapport'] and memory.investmentScore > thresholds['escalate_investment']
     if escalate_conditions_met:
-        if random.random() < thresholds['push_pull_probability']:
+        # If rapport and investment are solid, but sexual tension is lagging, it's a good time for a push-pull to create a spark.
+        if memory.sexualTension < (thresholds['ask_sexual_tension'] * 0.5):
             return StrategicGoal(type="APPLY_PUSH_PULL", justification="The conversation is good but safe. Create a spark by mixing a compliment with a playful challenge.", urgency="normal")
 
         memory.dateArcPhase = "escalation"
