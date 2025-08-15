@@ -11,7 +11,7 @@ from sqlalchemy.orm import Session
 
 from api_models import AnalysisRequest, FrontendAnalysisResponse
 from db.database import init_db, get_db
-from routers import options_router
+from routers import options_router, summary_router
 from services import analysis_service
 
 
@@ -59,7 +59,8 @@ app.add_middleware(
 )
 
 # Include API routers
-app.include_router(options_router.router)
+app.include_router(options_router.router, prefix="/api/v1")
+app.include_router(summary_router.router, prefix="/api/v1")
 
 
 # --- Custom Exception Handlers ---
