@@ -71,7 +71,7 @@ def get_geo_context(
             geo_context.timeZoneDifference = int(user_offset - match_offset)
         geo_context.countryDifference = geo_context.userLocation.country != geo_context.matchLocation.country
 
-    if round(geo_context.distance["miles"]) > 100:
+    if geo_context.distance["miles"] is not None and round(geo_context.distance["miles"]) > 100:
         geo_context.isVirtual = True
 
     logger.debug(f"Geo context result: {geo_context.model_dump_json(indent=2)}")
