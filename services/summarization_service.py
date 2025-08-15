@@ -54,7 +54,8 @@ def score_to_heatmap(score: float) -> str:
 # --- Main Service Function ---
 def summarize_analysis(
     full_analysis: FullConversationAnalysis,
-    history: List[Dict[str, Any]]
+    history: List[Dict[str, Any]],
+    analysis_engine: str
 ) -> SummarizedAnalysis:
     """
     Transforms a detailed FullConversationAnalysis object into a concise,
@@ -62,6 +63,7 @@ def summarize_analysis(
     """
     logger.debug("Starting analysis summarization.")
 
+    last_message_analysis = full_analysis.lastMessageAnalysis
     conversation_text = " ".join([msg["content"] for msg in history])
     topic_scores = get_semantic_scores(conversation_text, TOPIC_DEFINITIONS)
 
@@ -73,14 +75,23 @@ def summarize_analysis(
         conversation_stage=full_analysis.memory.dateArcPhase,
         topic_heatmap={topic: score_to_heatmap(score) for topic, score in topic_scores.items()},
         liked_topics=[topic for topic, score in topic_scores.items() if score > 0.35],
-        disliked_topics=[],  # Low score doesn't mean dislike, this is a harder problem.
-        reciprocity_balance="balanced", # Placeholder
+        disliked_topics=[],
+        reciprocity_balance="balanced",
         flirtation_level=flirtation_level,
-        profile_topics={}, # Placeholder
+        profile_topics={},
         has_recent_greeting=not full_analysis.suppressGreeting,
+        conversationState=full_analysis.conversationState,
+        sexualResponseSuggestion=full_analysis.sexualAnalysis.sexualResponseSuggestion,
+        isGeoRelated=last_message_analysis.isGeoRelated if last_message_analysis else False,
     )
 
-    last_message_analysis = full_analysis.lastMessageAnalysis
+    memory_summary = MemorySummary(
+        insideJokes=full_analysis.memory.insideJokes,
+        questionHistory=full_analysis.memory.questionHistory,
+        kinksAndFetishes=full_analysis.sexualAnalysis.kinksAndFetishes,
+        redFlags=full_analysis.memory.redFlags,
+    )
+
     if last_message_analysis:
         intent_scores = get_semantic_scores(last_message_analysis.content, INTENT_DEFINITIONS)
         last_message_intent = max(intent_scores, key=intent_scores.get) if intent_scores else "statement"
@@ -90,7 +101,7 @@ def summarize_analysis(
             text=last_message_analysis.content,
             intent=last_message_intent,
             topic=max(topic_scores, key=topic_scores.get) if topic_scores else "general",
-            sentiment= "positive" if last_message_analysis.subtext.valence > 0.1 else "negative" if last_message_analysis.subtext.valence < -0.1 else "neutral",
+            sentiment="positive" if last_message_analysis.subtext.valence > 0.1 else "negative" if last_message_analysis.subtext.valence < -0.1 else "neutral",
             emotion="excited" if last_message_analysis.subtext.arousal > 0.1 else "calm",
             explicit="flirting_or_sexual" in last_message_analysis.subtext.intents,
             isQuestion=last_message_analysis.questionInfo.isQuestion,
@@ -101,19 +112,31 @@ def summarize_analysis(
             sentiment="none", emotion="none", explicit=False, isQuestion=False
         )
 
+    suggestions = full_analysis.responseSuggestions
     recommended_actions = RecommendedActions(
         focus_topic=max(topic_scores, key=topic_scores.get) if topic_scores else "rapport",
-        ask_question_back=full_analysis.responseSuggestions.endWithQuestion,
-        escalate_flirtation=flirtation_level != "high", # Suggest escalation if not already high
-        next_topic_suggestion=[], # Placeholder
+        ask_question_back=suggestions.endWithQuestion,
+        escalate_flirtation=flirtation_level != "high",
+        next_topic_suggestion=[],
         isVirtual=full_analysis.geoContext.isVirtual,
-        avoid_repeating_user=False # Placeholder
+        avoid_repeating_user=False,
+        length=suggestions.length,
+        tone=suggestions.tone,
+        linguisticStyle=suggestions.linguisticStyle,
+        emojiStrategy=suggestions.emojiStrategy,
+        endWithQuestion=suggestions.endWithQuestion,
+        suggestedNextAction=suggestions.suggestedNextAction,
+        analysisEngine=analysis_engine,
+        sexualCommunicationStyle=full_analysis.sexualAnalysis.sexualCommunicationStyle,
+        dateArcPhase=full_analysis.memory.dateArcPhase,
+        suggestedResponseStyle=last_message_analysis.suggestedResponseStyle if last_message_analysis else "casual",
     )
 
     summary = SummarizedAnalysis(
         conversation_summary=conversation_summary,
         last_message=last_message,
         recommended_actions=recommended_actions,
+        memory_summary=memory_summary,
     )
 
     logger.debug("Finished analysis summarization.")

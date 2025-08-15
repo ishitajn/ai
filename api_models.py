@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, computed_field
 from typing import List, Optional, Dict
 
 from analysis_models import (
@@ -29,6 +29,11 @@ class UISettings(BaseModel):
     local_model_name: Optional[str] = None # Made optional as it may not be relevant
     useEnhancedNlp: bool = Field(default=False)
     # Optional overrides can be added here if ever needed again
+
+    @computed_field
+    @property
+    def analysis_engine(self) -> str:
+        return "enhanced_vader" if self.useEnhancedNlp else "legacy_keyword"
 
 class AnalysisRequest(BaseModel):
     """Payload for the /analyze endpoint."""
@@ -68,6 +73,16 @@ class ConversationSummary(BaseModel):
     flirtation_level: str
     profile_topics: Dict[str, str]
     has_recent_greeting: bool
+    # New fields from user request
+    conversationState: str
+    sexualResponseSuggestion: str
+    isGeoRelated: bool
+
+class MemorySummary(BaseModel):
+    insideJokes: List[str]
+    questionHistory: List[str]
+    kinksAndFetishes: List[str]
+    redFlags: List[str]
 
 class LastMessageSummary(BaseModel):
     sender: str
@@ -86,8 +101,20 @@ class RecommendedActions(BaseModel):
     next_topic_suggestion: List[str]
     isVirtual: bool
     avoid_repeating_user: bool
+    # New fields from user request
+    length: int
+    tone: int
+    linguisticStyle: str
+    emojiStrategy: str
+    endWithQuestion: bool
+    suggestedNextAction: str
+    analysisEngine: str
+    sexualCommunicationStyle: str
+    dateArcPhase: str
+    suggestedResponseStyle: Optional[str] = None
 
 class SummarizedAnalysis(BaseModel):
     conversation_summary: ConversationSummary
     last_message: LastMessageSummary
     recommended_actions: RecommendedActions
+    memory_summary: MemorySummary

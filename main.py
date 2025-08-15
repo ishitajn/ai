@@ -90,9 +90,6 @@ async def analyze_conversation(request: AnalysisRequest, db: Session = Depends(g
             ui_settings=request.ui_settings
         )
 
-        # Determine which analysis engine was used
-        analysis_engine = "enhanced_vader" if request.ui_settings.useEnhancedNlp else "legacy_keyword"
-
         # Map the full internal analysis object to the frontend-specific response model
         return FrontendAnalysisResponse(
             conversationState=analysis.conversationState,
@@ -103,7 +100,7 @@ async def analyze_conversation(request: AnalysisRequest, db: Session = Depends(g
             sexualAnalysis=analysis.sexualAnalysis,
             responseSuggestions=analysis.responseSuggestions,
             geoContext=analysis.geoContext,
-            analysisEngine=analysis_engine
+            analysisEngine=request.ui_settings.analysis_engine
         )
     except Exception as e:
         logger.error(f"An error occurred during analysis for {request.matchId}: {e}", exc_info=True)

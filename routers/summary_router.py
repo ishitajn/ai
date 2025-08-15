@@ -26,11 +26,11 @@ async def get_analysis_summary(request: AnalysisRequest, db: Session = Depends(g
     )
 
     # Step 2: Summarize the detailed analysis
-    # Note: Pydantic models in, dicts out from conversationHistory
     history_as_dicts = [msg.model_dump() for msg in request.scraped_data.conversationHistory]
     summary = summarization_service.summarize_analysis(
         full_analysis=full_analysis,
-        history=history_as_dicts
+        history=history_as_dicts,
+        analysis_engine=request.ui_settings.analysis_engine
     )
 
     return summary
