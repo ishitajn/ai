@@ -206,6 +206,11 @@ RED_FLAGS = ["my ex", "still friends with my ex", "still live with my ex", "dram
              "unhinged", "i'm a handful", "money problems", "i'm broke", "can you lend me", "venmo me", "cash app me", "move on fast", "get attached quickly", "love bombing",
              "looking for someone to take care of me", "spoil me", "i have a dark side", "not like other girls", "if you can't handle me at my worst", ]
 
+KINKS_AND_FETISHES_KEYWORDS = [
+    "bdsm", "bondage", "dom", "sub", "dominant", "submissive", "daddy", "mommy", "leash", "collar", "spank", "choke",
+    "feet", "foot fetish", "pegging", "cuck", "humiliation", "roleplay", "latex", "leather", "puppy play"
+]
+
 # --- Date Analysis Constants ---
 DATE_KEYWORDS = {"coffee": "coffee", "drinks": "drinks", "dinner": "dinner", "walk": "walk", "hike": "hike", "movie": "movie", "call": "virtual", "video chat": "virtual",
                  "bar"   : "drinks", "restaurant": "dinner", "park": "walk", }
@@ -260,6 +265,8 @@ SUGGESTION_ACTION_ESCALATE_FLIRT_RAPPORT = 0.5
 SUGGESTION_ACTION_ESCALATE_FLIRT_INVESTMENT = 0.2
 
 # Summarization Service
+TOPIC_LIKED_THRESHOLD = 0.3
+TOPIC_DISLIKED_THRESHOLD = -0.3
 SEMANTIC_HEATMAP_HOT_THRESHOLD = 0.6
 SEMANTIC_HEATMAP_MEDIUM_THRESHOLD = 0.35
 BASIC_HEATMAP_HOT_THRESHOLD = 2

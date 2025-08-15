@@ -1,5 +1,5 @@
 import logging
-from typing import List
+from typing import List, Optional
 
 import spacy
 from spacy.matcher.dependencymatcher import defaultdict
@@ -75,7 +75,9 @@ def update_memory_from_history(
             memory.questionHistory.append(msg.content)
         if msg.role == 'assistant' and msg.subtext.valence > INSIDE_JOKE_VALENCE_THRESHOLD and any(laugh in msg.content.lower() for laugh in ["lmao", "lol", "haha"]):
             if i > 0 and history[i-1].role == 'user':
-                memory.insideJokes.append(history[i-1].content)
+                joke_subject = _extract_joke_subject(history[i-1].content, nlp)
+                if joke_subject:
+                    memory.insideJokes.append(joke_subject)
         doc = nlp(msg.content)
         topics = [c.text.lower() for c in doc.noun_chunks if len(c.text.split()) > 1 and not c.root.is_stop]
         for topic_text in topics:
@@ -103,6 +105,17 @@ def update_memory_from_history(
     memory.dateArcPhase = phase
     logger.debug(f"Final memory object: {memory.model_dump_json(indent=2)}")
     return memory
+
+
+def _extract_joke_subject(text: str, nlp: spacy.language.Language) -> Optional[str]:
+    """Extracts the most likely subject of a joke from a sentence."""
+    doc = nlp(text)
+    # Find the longest noun chunk that is not a pronoun
+    longest_noun_chunk = ""
+    for chunk in doc.noun_chunks:
+        if chunk.root.pos_ != "PRON" and len(chunk.text) > len(longest_noun_chunk):
+            longest_noun_chunk = chunk.text
+    return longest_noun_chunk if longest_noun_chunk else None
 
 
 def _get_personality_profile(text: str, topic_classifier: pipeline) -> PersonalityProfile:
