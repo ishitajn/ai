@@ -126,7 +126,7 @@ def summarize_analysis(
 
     conversation_summary = ConversationSummary(
         is_engaged=full_analysis.conversationState == "ACTIVE_CONVO",
-        date_arc_phase=full_analysis.memory.dateArcPhase,
+        conversation_stage=full_analysis.memory.dateArcPhase,
         topic_heatmap=topic_heatmap,
         liked_topics=liked_topics,
         disliked_topics=[],
@@ -136,6 +136,7 @@ def summarize_analysis(
         has_recent_greeting=not full_analysis.suppressGreeting,
         conversationState=full_analysis.conversationState,
         sexualResponseSuggestion=full_analysis.sexualAnalysis.sexualResponseSuggestion,
+        isGeoRelated=last_message_analysis.isGeoRelated if last_message_analysis else False,
     )
 
     memory_summary = MemorySummary(
