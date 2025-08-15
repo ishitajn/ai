@@ -2,7 +2,11 @@ import logging
 from typing import List
 
 from analysis_models import SexualAnalysis, MessageAnalysis, MatchMemory, ConsentSignal
-from constants import SEXUAL_WORDS
+from constants import (
+    SEXUAL_WORDS, SEXUAL_INTENT_CONFIDENCE_MAX, SEXUAL_INTENT_CONFIDENCE_BASE,
+    SEXUAL_INTENT_CONFIDENCE_BONUS, RECIPROCITY_SCORE_MAX, RECIPROCITY_SCORE_UNRECIPROCATED,
+    RECIPROCITY_SCORE_BALANCED, ESCALATION_PACE_FAST_THRESHOLD, ESCALATION_PACE_MODERATE_THRESHOLD
+)
 
 logger = logging.getLogger(__name__)
 
@@ -16,18 +20,19 @@ def get_sexual_analysis(analyzed_messages: List[MessageAnalysis], memory: MatchM
         if msg.role == 'assistant' and "can't wait" in msg.content.lower():
             sexual_analysis.consentSignals.append(ConsentSignal(type="enthusiastic_consent", evidence=msg.content))
     if match_sexual_intents > 0:
-        sexual_analysis.sexualIntentConfidence = min(0.95, 0.5 + (match_sexual_intents * 0.1))
+        sexual_analysis.sexualIntentConfidence = min(
+            SEXUAL_INTENT_CONFIDENCE_MAX,
+            SEXUAL_INTENT_CONFIDENCE_BASE + (match_sexual_intents * SEXUAL_INTENT_CONFIDENCE_BONUS)
+        )
     if user_sexual_intents > 0:
-        sexual_analysis.reciprocityScore = min(1.0, match_sexual_intents / user_sexual_intents)
+        sexual_analysis.reciprocityScore = min(RECIPROCITY_SCORE_MAX, match_sexual_intents / user_sexual_intents)
     elif match_sexual_intents > 0:
-        # User has not reciprocated, score is 0
-        sexual_analysis.reciprocityScore = 0.0
+        sexual_analysis.reciprocityScore = RECIPROCITY_SCORE_UNRECIPROCATED
     else:
-        # No sexual intents from either side, reciprocity is balanced
-        sexual_analysis.reciprocityScore = 1.0
-    if sexual_analysis.sexualTensionScore > 0.7:
+        sexual_analysis.reciprocityScore = RECIPROCITY_SCORE_BALANCED
+    if sexual_analysis.sexualTensionScore > ESCALATION_PACE_FAST_THRESHOLD:
         sexual_analysis.escalationPace = "fast"
-    elif sexual_analysis.sexualTensionScore > 0.4:
+    elif sexual_analysis.sexualTensionScore > ESCALATION_PACE_MODERATE_THRESHOLD:
         sexual_analysis.escalationPace = "moderate"
     else:
         sexual_analysis.escalationPace = "slow"

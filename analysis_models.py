@@ -78,8 +78,8 @@ class SexualAnalysis(BaseModel):
     explicitToImplicitRatio: float = 0.0
 
 class ResponseSuggestions(BaseModel):
-    length: int = 0
-    tone: int = 0
+    length: int = Field(0, description="A score from 0-100 indicating suggested response length.")
+    tone: int = Field(0, description="A score from 0-100 indicating suggested response tone (e.g., formal, casual, flirty).")
     linguisticStyle: str = "casual"
     emojiStrategy: str = "auto"
     endWithQuestion: bool = True
