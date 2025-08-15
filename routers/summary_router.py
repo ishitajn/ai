@@ -30,7 +30,8 @@ async def get_analysis_summary(request: AnalysisRequest, db: Session = Depends(g
     summary = summarization_service.summarize_analysis(
         full_analysis=full_analysis,
         history=history_as_dicts,
-        analysis_engine=request.ui_settings.analysis_engine
+        analysis_engine=request.ui_settings.analysis_engine,
+        use_enhanced_nlp=request.ui_settings.useEnhancedNlp
     )
 
     return summary
