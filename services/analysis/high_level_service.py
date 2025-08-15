@@ -33,19 +33,21 @@ def determine_conversation_state_and_pacing(
             last_message_date = datetime.datetime.fromisoformat(last_message.date.replace("Z", "+00:00"))
             time_since_last_message = now - last_message_date
 
-            if time_since_last_message.total_seconds() < TWO_DAYS:
+            seconds_since = time_since_last_message.total_seconds()
+
+            if seconds_since < TWO_DAYS:
                 if len(history) < 7:
                     return "EARLY_CONVO", "normal"
                 return "ACTIVE_CONVO", "normal"
-            elif time_since_last_message.total_seconds() >= TWO_DAYS:
-                return "REENGAGING_DAY", "normal"
-            elif time_since_last_message.total_seconds() >= ONE_WEEK:
-                return "REENGAGING_WEEK", "normal"
-            elif time_since_last_message.total_seconds() >= ONE_MONTH:
+            # Order checks from longest to shortest time
+            elif seconds_since >= ONE_MONTH:
                 return "REENGAGING_MONTH", "normal"
-            elif time_since_last_message.total_seconds() < 72 * 3600:
-                return "STALLED", "slow"
+            elif seconds_since >= ONE_WEEK:
+                return "REENGAGING_WEEK", "normal"
+            elif seconds_since >= TWO_DAYS:
+                return "REENGAGING_DAY", "normal"
             else:
+                # This case should logically not be reached, but as a fallback:
                 return "DEAD_CONVO", "stopped"
         except (ValueError, TypeError, AttributeError):
             return "ACTIVE_CONVO", "normal"
@@ -54,18 +56,25 @@ def determine_conversation_state_and_pacing(
 
 def has_recent_greeting(history: List[ScrapedConversationMessage]) -> bool:
     logger.debug("Checking for recent greeting.")
+    # Ensure two_days_ago is timezone-aware (UTC)
     two_days_ago = datetime.datetime.now(datetime.timezone.utc) - datetime.timedelta(days=2)
-    my_messages = [
-        msg for msg in history
-        if msg.role == "user" and
-           datetime.datetime.fromisoformat(msg.date.replace("Z", "+00:00")) >= two_days_ago
-    ]
-    for msg in my_messages:
-        try:
-            if any(greet in msg.content.lower() for greet in GREETING_KEYWORDS):
-                logger.debug("Recent greeting found.")
-                return True
-        except (ValueError, TypeError, AttributeError, IndexError):
+
+    for msg in history:
+        # Ensure message is from user and has a date
+        if msg.role != "user" or not msg.date:
             continue
+
+        try:
+            # Ensure the parsed date is timezone-aware
+            msg_time = datetime.datetime.fromisoformat(msg.date.replace("Z", "+00:00"))
+
+            if msg_time >= two_days_ago:
+                if any(greet in msg.content.lower() for greet in GREETING_KEYWORDS):
+                    logger.debug("Recent greeting found.")
+                    return True
+        except (ValueError, TypeError, AttributeError):
+            # Ignore messages with malformed dates or content
+            continue
+
     logger.debug("No greeting found in recent history.")
     return False

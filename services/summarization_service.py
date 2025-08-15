@@ -13,6 +13,8 @@ logger.info("Loading SentenceTransformer model...")
 model = SentenceTransformer('all-MiniLM-L6-v2')
 logger.info("SentenceTransformer model loaded successfully.")
 
+from spacy.lang.en.stop_words import STOP_WORDS
+
 # --- Semantic Definitions ---
 TOPIC_DEFINITIONS = {
     "travel": ["going on a trip", "visiting new places", "exploring the world", "booking a flight"],
@@ -30,6 +32,13 @@ INTENT_DEFINITIONS = {
     "joke": ["that's hilarious", "you're so funny", "I was just kidding"],
     "opinion": ["I think that's a great idea", "in my opinion, that's not right"],
 }
+
+# Create a simplified keyword set for basic analysis
+BASIC_TOPIC_KEYWORDS = {
+    topic: set(word for phrase in phrases for word in phrase.split() if word not in STOP_WORDS and len(word) > 2)
+    for topic, phrases in TOPIC_DEFINITIONS.items()
+}
+
 
 # --- Helper Functions ---
 def get_semantic_scores(text: str, definitions: Dict[str, List[str]]) -> Dict[str, float]:
@@ -84,8 +93,11 @@ def summarize_analysis(
 
     else:
         # BASIC: Use keyword matching for analysis
-        topic_scores = {topic: sum(1 for phrase in phrases if phrase in conversation_text)
-                        for topic, phrases in TOPIC_DEFINITIONS.items()}
+        conversation_words = set(conversation_text.split())
+        topic_scores = {
+            topic: sum(1 for keyword in keywords if keyword in conversation_words)
+            for topic, keywords in BASIC_TOPIC_KEYWORDS.items()
+        }
         topic_heatmap = {topic: "hot" if score > 2 else "medium" if score > 0 else "low"
                          for topic, score in topic_scores.items()}
         liked_topics = [topic for topic, score in topic_scores.items() if score > 0]
