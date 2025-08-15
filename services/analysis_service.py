@@ -90,6 +90,7 @@ def run_full_conversation_analysis(db: Session, match_id: str, scraped_data: Scr
 # --- Pipeline Router & Core Message Analysis ---
 
 def analyze_single_message(text: str, role: str, use_enhanced_nlp: bool) -> MessageAnalysis:
+    logger.debug(f"Analyzing single message. Role: {role}, Enhanced NLP: {use_enhanced_nlp}, Content: '{text}'")
     if not text:
         return MessageAnalysis(content="", role=role, subtext=SubtextAnalysis(), questionInfo=QuestionInfo())
 
@@ -106,11 +107,13 @@ def analyze_single_message(text: str, role: str, use_enhanced_nlp: bool) -> Mess
         wordCount=len([token for token in doc if token.is_alpha])
     )
     analysis_obj.suggestedResponseStyle = _suggest_response_style(analysis_obj)
+    logger.debug(f"Single message analysis result: {analysis_obj.model_dump_json(indent=2)}")
     return analysis_obj
 
 # --- Sub-analysis Modules & Helper Functions ---
 
 def _analyze_subtext_legacy(doc: spacy.tokens.Doc) -> SubtextAnalysis:
+    logger.debug(f"Analyzing subtext (legacy) for: '{doc.text}'")
     text_lower = doc.text.lower()
     subtext = SubtextAnalysis(intents=[])
     valence, arousal = 0.0, 0.0
@@ -129,13 +132,17 @@ def _analyze_subtext_legacy(doc: spacy.tokens.Doc) -> SubtextAnalysis:
     subtext.valence = max(-1, min(1, valence)); subtext.arousal = max(-1, min(1, arousal))
     subtext.isAmbiguous = any(phrase in text_lower for phrase in AMBIGUOUS_PHRASES)
     subtext.intents = list(set(subtext.intents))
+    logger.debug(f"Subtext (legacy) result: {subtext.model_dump_json(indent=2)}")
     return subtext
 
 def _analyze_subtext_enhanced(doc: spacy.tokens.Doc) -> SubtextAnalysis:
+    logger.debug(f"Analyzing subtext (enhanced) for: '{doc.text}'")
     subtext = _analyze_subtext_legacy(doc)
     vader_scores = vader_analyzer.polarity_scores(doc.text)
+    logger.debug(f"Vader scores: {vader_scores}")
     subtext.valence = vader_scores['compound']
     subtext.arousal = 0.0
+    logger.debug(f"Subtext (enhanced) result: {subtext.model_dump_json(indent=2)}")
     return subtext
 
 def _update_memory_from_history(history: List[ScrapedConversationMessage], analyzed_messages: List[MessageAnalysis]) -> MatchMemory:
@@ -204,8 +211,11 @@ def _update_memory_from_history(history: List[ScrapedConversationMessage], analy
     return memory
 
 def _get_personality_profile(text: str) -> PersonalityProfile:
+    logger.debug(f"Getting personality profile for text: '{text[:100]}...'")
     profile = PersonalityProfile()
-    if not topic_classifier: return profile
+    if not topic_classifier:
+        logger.debug("Topic classifier not available, returning empty profile.")
+        return profile
     trait_labels = {
         "extraversion": "extroverted, outgoing, and sociable language",
         "agreeableness": "agreeable, compassionate, and friendly language",
@@ -217,17 +227,21 @@ def _get_personality_profile(text: str) -> PersonalityProfile:
         for label, score in zip(result['labels'], result['scores']):
             setattr(profile, label_to_trait[label], round(score, 2))
     except Exception as e:
-        print(f"Error during personality trait classification: {e}")
+        logger.error(f"Error during personality trait classification: {e}", exc_info=True)
+    logger.debug(f"Personality profile result: {profile.model_dump_json(indent=2)}")
     return profile
 
 def _detect_red_flags(analyzed_messages: List[MessageAnalysis]) -> List[str]:
+    logger.debug("Detecting red flags.")
     flags = []
     for msg in analyzed_messages:
         text_lower = msg.content.lower()
         for flag_phrase in RED_FLAGS:
             if flag_phrase in text_lower:
                 flags.append(flag_phrase)
-    return list(set(flags))
+    unique_flags = list(set(flags))
+    logger.debug(f"Red flags detected: {unique_flags}")
+    return unique_flags
 
 def _get_geo_context(user_location_str: str, match_location_str: Optional[str], match_profile: str) -> GeoContext:
     logger.debug(f"Getting geo context for user_location='{user_location_str}', match_location='{match_location_str}'")
@@ -334,32 +348,58 @@ def _get_response_suggestions(analysis: FullConversationAnalysis) -> ResponseSug
     return suggestions
 
 def _get_suggested_next_action(memory: MatchMemory, last_match_msg: Optional[MessageAnalysis]) -> str:
-    if last_match_msg and any(re.search(p, last_match_msg.content.lower()) for p in SHIT_TEST_PATTERNS): return "MAINTAIN_FRAME"
-    if memory.rapportScore > 0.7 and memory.investmentScore > 0.5: return "PROPOSE_DATE"
-    if memory.rapportScore > 0.5 and memory.investmentScore > 0.2: return "ESCALATE_FLIRT"
+    logger.debug(f"Getting suggested next action. Rapport: {memory.rapportScore}, Investment: {memory.investmentScore}")
+    if last_match_msg and any(re.search(p, last_match_msg.content.lower()) for p in SHIT_TEST_PATTERNS):
+        logger.debug("Shit test detected. Suggesting: MAINTAIN_FRAME")
+        return "MAINTAIN_FRAME"
+    if memory.rapportScore > 0.7 and memory.investmentScore > 0.5:
+        logger.debug("High rapport and investment. Suggesting: PROPOSE_DATE")
+        return "PROPOSE_DATE"
+    if memory.rapportScore > 0.5 and memory.investmentScore > 0.2:
+        logger.debug("Good rapport and investment. Suggesting: ESCALATE_FLIRT")
+        return "ESCALATE_FLIRT"
+    logger.debug("Default suggestion: BUILD_RAPPORT")
     return "BUILD_RAPPORT"
 
 def _detect_geo_related(doc: spacy.tokens.Doc) -> bool:
-    return any(token.lemma_ in GEO_TRIGGERS for token in doc)
+    logger.debug(f"Detecting geo-related terms in: '{doc.text}'")
+    result = any(token.lemma_ in GEO_TRIGGERS for token in doc)
+    logger.debug(f"Geo-related result: {result}")
+    return result
 
 def _suggest_response_style(analysis: MessageAnalysis) -> str:
-    if analysis.subtext.isSarcastic: return "witty"
-    if "flirting_or_sexual" in analysis.subtext.intents: return "playful"
+    logger.debug(f"Suggesting response style for message: {analysis.model_dump_json()}")
+    if analysis.subtext.isSarcastic:
+        logger.debug("Sarcasm detected, suggesting witty style.")
+        return "witty"
+    if "flirting_or_sexual" in analysis.subtext.intents:
+        logger.debug("Flirting intent detected, suggesting playful style.")
+        return "playful"
     if analysis.subtext.isVulnerable: return "supportive"
     if analysis.questionInfo.isQuestion: return "direct"
     if analysis.subtext.valence > 0.5: return "charming"
     return "casual"
 
 def _analyze_question(doc: spacy.tokens.Doc) -> QuestionInfo:
+    logger.debug(f"Analyzing question for: '{doc.text}'")
     text_lower = doc.text.lower().strip()
-    if text_lower.endswith('?'): return QuestionInfo(isQuestion=True, count=1, type="open" if doc[0].tag_ in ("WP", "WRB") else "closed")
-    if any(text_lower.startswith(s) for s in INDIRECT_QUESTION_STARTERS): return QuestionInfo(isQuestion=True, count=1, type="indirect")
-    return QuestionInfo()
+    result = QuestionInfo()
+    if text_lower.endswith('?'):
+        result = QuestionInfo(isQuestion=True, count=1, type="open" if doc[0].tag_ in ("WP", "WRB") else "closed")
+    elif any(text_lower.startswith(s) for s in INDIRECT_QUESTION_STARTERS):
+        result = QuestionInfo(isQuestion=True, count=1, type="indirect")
+    logger.debug(f"Question analysis result: {result.model_dump_json()}")
+    return result
 
 def _is_low_effort(text: str, doc: spacy.tokens.Doc) -> bool:
+    logger.debug(f"Checking for low effort: '{text}'")
     text_clean = text.strip().lower()
-    if len(doc) < 4 and text_clean in LOW_EFFORT_WORDS: return True
-    return all(w.strip(".,!?-") in LOW_EFFORT_WORDS for w in text_clean.split())
+    if len(doc) < 4 and text_clean in LOW_EFFORT_WORDS:
+        logger.debug("Low effort detected (short message in low effort list).")
+        return True
+    result = all(w.strip(".,!?-") in LOW_EFFORT_WORDS for w in text_clean.split())
+    logger.debug(f"Low effort result: {result}")
+    return result
 
 def _determine_conversation_state_and_pacing(history: List[ScrapedConversationMessage], last_match_analysis: Optional[MessageAnalysis]) -> Tuple[str, str]:
     logger.debug("Determining conversation state.")
@@ -394,11 +434,18 @@ def _determine_conversation_state_and_pacing(history: List[ScrapedConversationMe
     return "ACTIVE_CONVO", "normal"
 
 def _has_recent_greeting(history: List[ScrapedConversationMessage]) -> bool:
+    logger.debug("Checking for recent greeting.")
     now = datetime.datetime.now(datetime.timezone.utc)
     for msg in reversed(history):
         try:
             msg_date = datetime.datetime.fromisoformat(msg.date.replace("Z", "+00:00"))
-            if (now - msg_date).total_seconds() > 12 * 3600: break
-            if msg.role == 'user' and any(greet in msg.content.lower() for greet in GREETING_KEYWORDS): return True
-        except (ValueError, TypeError, AttributeError, IndexError): continue
+            if (now - msg_date).total_seconds() > 12 * 3600:
+                logger.debug("No recent greeting found within the last 12 hours.")
+                return False
+            if msg.role == 'user' and any(greet in msg.content.lower() for greet in GREETING_KEYWORDS):
+                logger.debug("Recent greeting found.")
+                return True
+        except (ValueError, TypeError, AttributeError, IndexError):
+            continue
+    logger.debug("No greeting found in recent history.")
     return False
