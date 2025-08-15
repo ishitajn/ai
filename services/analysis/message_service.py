@@ -81,15 +81,63 @@ def _analyze_subtext_enhanced(doc: spacy.tokens.Doc, vader_analyzer) -> SubtextA
     logger.debug(f"Subtext (enhanced) result: {subtext.model_dump_json(indent=2)}")
     return subtext
 
-#TODO: Broken logic. Not a concrete logic. Update it, writing from scratch
 def _analyze_question(doc: spacy.tokens.Doc) -> QuestionInfo:
+    """
+    Analyzes a spaCy Doc to find and classify questions within the text.
+    It iterates through sentences, identifies questions, counts them, and determines
+    a prioritized type for the entire message.
+    """
     logger.debug(f"Analyzing question for: '{doc.text}'")
-    text_lower = doc.text.lower().strip()
-    result = QuestionInfo()
-    if text_lower.endswith('?'):
-        result = QuestionInfo(isQuestion=True, count=1, type="open" if doc[0].tag_ in ("WP", "WRB") else "closed")
-    elif any(text_lower.startswith(s) for s in INDIRECT_QUESTION_STARTERS):
-        result = QuestionInfo(isQuestion=True, count=1, type="indirect")
+    question_count = 0
+    question_types = set()
+
+    # Define question words (lemmas) for identifying open-ended questions
+    question_words = {"who", "what", "where", "when", "why", "how", "which"}
+
+    for sent in doc.sents:
+        sent_text_lower = sent.text.lower().strip()
+        is_a_question = False
+        sent_type = None
+
+        # 1. Direct question check (ends with '?')
+        if sent_text_lower.endswith('?'):
+            is_a_question = True
+
+        # 2. Indirect question check (starts with specific phrases)
+        if any(sent_text_lower.startswith(s) for s in INDIRECT_QUESTION_STARTERS):
+            is_a_question = True
+            sent_type = "indirect"
+
+        # If it's a question, determine the type
+        if is_a_question:
+            question_count += 1
+            # If type isn't already set to indirect, classify as open or closed
+            if not sent_type:
+                # Check for question words to determine if it's open
+                if any(token.lemma_.lower() in question_words for token in sent):
+                    sent_type = "open"
+                else:
+                    sent_type = "closed"
+            question_types.add(sent_type)
+
+    if not question_types:
+        return QuestionInfo()
+
+    # Prioritize question type: open > indirect > closed
+    final_type = "none"
+    if "open" in question_types:
+        final_type = "open"
+    elif "indirect" in question_types:
+        final_type = "indirect"
+    elif "closed" in question_types:
+        final_type = "closed"
+
+    result = QuestionInfo(
+        isQuestion=True,
+        count=question_count,
+        type=final_type
+    )
+
     logger.debug(f"Question analysis result: {result.model_dump_json()}")
     return result
 
