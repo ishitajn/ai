@@ -4,7 +4,7 @@ import re
 from typing import Optional
 
 from analysis_models import ResponseSuggestions, FullConversationAnalysis, MatchMemory, MessageAnalysis
-from utils.constants import SHIT_TEST_PATTERNS
+from constants import SHIT_TEST_PATTERNS
 
 logger = logging.getLogger(__name__)
 

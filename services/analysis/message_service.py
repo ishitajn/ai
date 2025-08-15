@@ -1,9 +1,8 @@
 import logging
 import spacy
-from typing import List
 
 from analysis_models import MessageAnalysis, SubtextAnalysis, QuestionInfo
-from utils.constants import (
+from constants import (
     POSITIVE_WORDS, NEGATIVE_WORDS, AROUSAL_WORDS, VULNERABLE_WORDS,
     SEXUAL_WORDS, SEXUAL_EMOJIS, LOW_EFFORT_WORDS, GEO_TRIGGERS,
     AMBIGUOUS_PHRASES, SARCASTIC_MARKERS, INTENSIFIERS, NEGATION_WORDS,
@@ -12,12 +11,13 @@ from utils.constants import (
 
 logger = logging.getLogger(__name__)
 
+
 def analyze_single_message(
-    text: str,
-    role: str,
-    use_enhanced_nlp: bool,
-    nlp: spacy.language.Language,
-    vader_analyzer
+        text: str,
+        role: str,
+        use_enhanced_nlp: bool,
+        nlp: spacy.language.Language,
+        vader_analyzer
 ) -> MessageAnalysis:
     logger.debug(f"Analyzing single message. Role: {role}, Enhanced NLP: {use_enhanced_nlp}, Content: '{text}'")
     if not text:
@@ -48,8 +48,7 @@ def _analyze_subtext_legacy(doc: spacy.tokens.Doc) -> SubtextAnalysis:
         token_text, multiplier = token.text.lower(), 1.0
         if token.i > 0 and doc[token.i - 1].text.lower() in INTENSIFIERS:
             multiplier *= INTENSIFIERS.get(doc[token.i - 1].text.lower(), 1.0)
-        if any(c.dep_ == 'neg' for c in token.children) or \
-           (token.i > 0 and doc[token.i - 1].text.lower() in NEGATION_WORDS):
+        if any(c.dep_ == 'neg' for c in token.children) or (token.i > 0 and doc[token.i - 1].text.lower() in NEGATION_WORDS):
             multiplier *= -1
         if token_text in POSITIVE_WORDS:
             valence += POSITIVE_WORDS[token_text] * multiplier
@@ -82,6 +81,7 @@ def _analyze_subtext_enhanced(doc: spacy.tokens.Doc, vader_analyzer) -> SubtextA
     logger.debug(f"Subtext (enhanced) result: {subtext.model_dump_json(indent=2)}")
     return subtext
 
+#TODO: Broken logic. Not a concrete logic. Update it, writing from scratch
 def _analyze_question(doc: spacy.tokens.Doc) -> QuestionInfo:
     logger.debug(f"Analyzing question for: '{doc.text}'")
     text_lower = doc.text.lower().strip()

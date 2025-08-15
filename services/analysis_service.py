@@ -8,8 +8,7 @@ from transformers import pipeline
 
 from api_models import ScrapedData, UISettings
 from analysis_models import FullConversationAnalysis
-from config import SPACY_MODEL, GEOLOCATOR_USER_AGENT
-from utils.constants import TOPIC_STATUS_AVOID_THRESHOLD
+from config import SPACY_MODEL, GEOLOCATOR_USER_AGENT, TOPIC_STATUS_AVOID_THRESHOLD
 
 from .analysis import (
     message_service,
@@ -29,6 +28,7 @@ try:
 except OSError:
     print(f"Downloading '{SPACY_MODEL}' model for spaCy...")
     from spacy.cli import download
+
     download(SPACY_MODEL)
     nlp = spacy.load(SPACY_MODEL)
 
@@ -41,20 +41,21 @@ try:
 except Exception as e:
     logger.error(f"Failed to load topic classifier model: {e}", exc_info=True)
 
+
 # --- Main Service Function ---
 
 def run_full_conversation_analysis(
-    db: Session,
-    match_id: str,
-    scraped_data: ScrapedData,
-    ui_settings: UISettings
+        db: Session,
+        match_id: str,
+        scraped_data: ScrapedData,
+        ui_settings: UISettings
 ) -> FullConversationAnalysis:
     logger.debug(f"Starting full analysis for match_id: {match_id}")
     logger.debug(f"Input Scraped Data: {scraped_data.model_dump_json(indent=2)}")
     logger.debug(f"Input UI Settings: {ui_settings.model_dump_json(indent=2)}")
 
     history = scraped_data.conversationHistory
-    
+
     analyzed_messages = [
         message_service.analyze_single_message(
             text=msg.content,

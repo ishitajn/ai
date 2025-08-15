@@ -2,7 +2,7 @@ import logging
 from typing import List
 
 from analysis_models import SexualAnalysis, MessageAnalysis, MatchMemory, ConsentSignal
-from utils.constants import SEXUAL_WORDS
+from constants import SEXUAL_WORDS
 
 logger = logging.getLogger(__name__)
 

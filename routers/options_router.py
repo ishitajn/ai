@@ -1,8 +1,8 @@
 from fastapi import APIRouter
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 from typing import List, Dict, Any, Literal, Union, Optional
 
-from utils.constants import LINGUISTIC_STYLES, HUMOR_STYLES, EMOJI_STRATEGIES
+from constants import LINGUISTIC_STYLES, HUMOR_STYLES
 
 router = APIRouter(
     prefix="/api/v1/options",
@@ -130,25 +130,25 @@ async def get_all_options():
         title="Power User & Debug",
         description="Advanced controls for fine-tuning the AI's behavior and analysis engine.",
         parameters={
-            "useEnhancedNlp": ToggleParameter(
+            "useEnhancedNlp"              : ToggleParameter(
                 ui_type="toggle", label="Use Enhanced NLP Models",
                 description="Enable slower, more powerful NLP models for analysis. May significantly increase processing time.",
                 default=False
             ),
-            "humorStyle": DropdownParameter(
+            "humorStyle"                  : DropdownParameter(
                 ui_type="dropdown", label="Humor Style", description="Specify the exact type of humor to use.",
                 options=[Option(key=s, name=s.title(), description="") for s in HUMOR_STYLES]
             ),
-            "modelTemperature": SliderParameter(ui_type="slider", label="Model Temperature",
-                                                description="Controls the creativity of the AI.", min=0.1, max=1.5,
-                                                step=0.1, default=0.7),
+            "modelTemperature"            : SliderParameter(ui_type="slider", label="Model Temperature",
+                                                            description="Controls the creativity of the AI.", min=0.1, max=1.5,
+                                                            step=0.1, default=0.7),
             "analysis_overrides_separator": Separator(ui_type="separator", label="Analysis & Psychology Overrides"),
-            "investmentScore_override": SliderParameter(ui_type="slider", label="Force Investment Score",
-                                                        description="Manually override the AI's calculated investment score (-1.0 to 1.0).",
-                                                        min=-1.0, max=1.0, step=0.1, default=None),
-            "rapportScore_override": SliderParameter(ui_type="slider", label="Force Rapport Score",
-                                                     description="Manually override the AI's calculated rapport score (0.0 to 1.0).",
-                                                     min=0.0, max=1.0, step=0.1, default=None),
+            "investmentScore_override"    : SliderParameter(ui_type="slider", label="Force Investment Score",
+                                                            description="Manually override the AI's calculated investment score (-1.0 to 1.0).",
+                                                            min=-1.0, max=1.0, step=0.1, default=None),
+            "rapportScore_override"       : SliderParameter(ui_type="slider", label="Force Rapport Score",
+                                                            description="Manually override the AI's calculated rapport score (0.0 to 1.0).",
+                                                            min=0.0, max=1.0, step=0.1, default=None),
         }
     )
 

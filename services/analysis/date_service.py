@@ -2,8 +2,8 @@ import logging
 import spacy
 from typing import List
 
-from analysis_models import DateAnalysis, DateLogistics, MessageAnalysis
-from utils.constants import PLANNING_WORDS, DATE_KEYWORDS, COMMITMENT_LEVELS
+from analysis_models import DateAnalysis, MessageAnalysis
+from constants import PLANNING_WORDS, DATE_KEYWORDS, COMMITMENT_LEVELS
 
 logger = logging.getLogger(__name__)
 

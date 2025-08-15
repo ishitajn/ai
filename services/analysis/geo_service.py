@@ -1,24 +1,26 @@
-import logging
-import spacy
 import datetime
+import logging
 from typing import Optional
-from geopy.geocoders import Nominatim
+
+import pytz
+import spacy
 from geopy.distance import great_circle
 from geopy.exc import GeocoderTimedOut, GeocoderUnavailable
+from geopy.geocoders import Nominatim
 from timezonefinder import TimezoneFinder
-import pytz
 
 from analysis_models import GeoContext
 
 logger = logging.getLogger(__name__)
 
+
 def get_geo_context(
-    user_location_str: str,
-    match_location_str: Optional[str],
-    match_profile: str,
-    geolocator: Nominatim,
-    tf: TimezoneFinder,
-    nlp: spacy.language.Language
+        user_location_str: str,
+        match_location_str: Optional[str],
+        match_profile: str,
+        geolocator: Nominatim,
+        tf: TimezoneFinder,
+        nlp: spacy.language.Language
 ) -> GeoContext:
     logger.debug(f"Getting geo context for user_location='{user_location_str}', match_location='{match_location_str}'")
     geo_context = GeoContext()
@@ -31,6 +33,7 @@ def get_geo_context(
         context_obj.state = address.get('state')
         context_obj.country = address.get('country')
         context_obj.timeZone = tf.timezone_at(lng=location.longitude, lat=location.latitude)
+
         if context_obj.timeZone:
             now = datetime.datetime.now(pytz.timezone(context_obj.timeZone))
             if 6 <= now.hour < 12:
@@ -67,6 +70,9 @@ def get_geo_context(
             match_offset = datetime.datetime.now(pytz.timezone(geo_context.matchLocation.timeZone)).utcoffset().total_seconds() / 3600
             geo_context.timeZoneDifference = int(user_offset - match_offset)
         geo_context.countryDifference = geo_context.userLocation.country != geo_context.matchLocation.country
+
+    if round(geo_context.distance["miles"]) > 100:
+        geo_context.isVirtual = True
 
     logger.debug(f"Geo context result: {geo_context.model_dump_json(indent=2)}")
     return geo_context

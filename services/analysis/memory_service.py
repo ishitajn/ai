@@ -1,21 +1,21 @@
 import logging
-import spacy
 from typing import List
-from spacy.matcher.dependencymatcher import defaultdict
-from transformers import pipeline
 
-from analysis_models import (
-    MessageAnalysis, MatchMemory, PersonalityProfile, TopicDetails
-)
-from utils.constants import RED_FLAGS
+import spacy
+from spacy.matcher.dependencymatcher import defaultdict
+from transformers import pipeline, Pipeline
+
+from analysis_models import (MatchMemory, MessageAnalysis, PersonalityProfile, TopicDetails)
+from constants import RED_FLAGS
 
 logger = logging.getLogger(__name__)
 
+
 def update_memory_from_history(
-    history: List,
-    analyzed_messages: List[MessageAnalysis],
-    nlp: spacy.language.Language,
-    topic_classifier: pipeline
+        history: List,
+        analyzed_messages: List[MessageAnalysis],
+        nlp: spacy.language.Language,
+        topic_classifier: Pipeline
 ) -> MatchMemory:
     memory = MatchMemory()
     topic_sentiments = defaultdict(list)
@@ -45,9 +45,7 @@ def update_memory_from_history(
             total_valence += msg.subtext.valence
         if "flirting_or_sexual" in msg.subtext.intents:
             tension_delta += 0.3
-    if user_messages and match_messages and \
-       "flirting_or_sexual" in user_messages[-1].subtext.intents and \
-       match_messages[-1].subtext.valence < -0.2:
+    if user_messages and match_messages and "flirting_or_sexual" in user_messages[-1].subtext.intents and match_messages[-1].subtext.valence < -0.2:
         tension_delta -= 0.5
     logger.debug(f"Calculated sexual tension delta: {tension_delta}")
     memory.sexualTension = max(0, min(1, (memory.sexualTension * 0.85) + tension_delta))
@@ -88,6 +86,7 @@ def update_memory_from_history(
     logger.debug(f"Final memory object: {memory.model_dump_json(indent=2)}")
     return memory
 
+
 def _get_personality_profile(text: str, topic_classifier: pipeline) -> PersonalityProfile:
     logger.debug(f"Getting personality profile for text: '{text[:100]}...'")
     profile = PersonalityProfile()
@@ -95,9 +94,9 @@ def _get_personality_profile(text: str, topic_classifier: pipeline) -> Personali
         logger.debug("Topic classifier not available, returning empty profile.")
         return profile
     trait_labels = {
-        "extraversion": "extroverted, outgoing, and sociable language",
+        "extraversion" : "extroverted, outgoing, and sociable language",
         "agreeableness": "agreeable, compassionate, and friendly language",
-        "openness": "language showing openness, imagination, and curiosity"
+        "openness"     : "language showing openness, imagination, and curiosity"
     }
     try:
         result = topic_classifier(text, list(trait_labels.values()), multi_label=True)
@@ -108,6 +107,7 @@ def _get_personality_profile(text: str, topic_classifier: pipeline) -> Personali
         logger.error(f"Error during personality trait classification: {e}", exc_info=True)
     logger.debug(f"Personality profile result: {profile.model_dump_json(indent=2)}")
     return profile
+
 
 def _detect_red_flags(analyzed_messages: List[MessageAnalysis]) -> List[str]:
     logger.debug("Detecting red flags.")

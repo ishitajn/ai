@@ -58,7 +58,6 @@ class DateAnalysis(BaseModel):
     dateLogistics: DateLogistics = Field(default_factory=DateLogistics)
     dateType: str = "none"
     dateVibe: str = "none"
-    isVirtual: bool = False
     whoInitiated: str = "none"
 
 class ConsentSignal(BaseModel):
@@ -102,6 +101,7 @@ class GeoContext(BaseModel):
     distance: Dict[str, Optional[int]] = Field(default_factory=lambda: {"km": None, "miles": None})
     timeZoneDifference: Optional[int] = None
     countryDifference: bool = False
+    isVirtual: bool = False
 
 # --- Main Analysis Container ---
 
