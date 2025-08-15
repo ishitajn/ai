@@ -3,7 +3,9 @@ from typing import Dict, Any, List
 from sentence_transformers import SentenceTransformer, util
 
 from analysis_models import FullConversationAnalysis
-from api_models import SummarizedAnalysis, ConversationSummary, LastMessageSummary, RecommendedActions
+from api_models import (
+    SummarizedAnalysis, ConversationSummary, LastMessageSummary, RecommendedActions, MemorySummary
+)
 
 logger = logging.getLogger(__name__)
 
