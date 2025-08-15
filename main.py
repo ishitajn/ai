@@ -11,7 +11,7 @@ from sqlalchemy.orm import Session
 
 from api_models import AnalysisRequest, FrontendAnalysisResponse
 from db.database import init_db, get_db
-from routers import options_router
+from routers import options_router, summary_router
 from services import analysis_service
 
 
@@ -59,7 +59,8 @@ app.add_middleware(
 )
 
 # Include API routers
-app.include_router(options_router.router)
+app.include_router(options_router.router, prefix="/api/v1")
+app.include_router(summary_router.router, prefix="/api/v1")
 
 
 # --- Custom Exception Handlers ---
@@ -89,9 +90,6 @@ async def analyze_conversation(request: AnalysisRequest, db: Session = Depends(g
             ui_settings=request.ui_settings
         )
 
-        # Determine which analysis engine was used
-        analysis_engine = "enhanced_vader" if request.ui_settings.useEnhancedNlp else "legacy_keyword"
-
         # Map the full internal analysis object to the frontend-specific response model
         return FrontendAnalysisResponse(
             conversationState=analysis.conversationState,
@@ -102,7 +100,7 @@ async def analyze_conversation(request: AnalysisRequest, db: Session = Depends(g
             sexualAnalysis=analysis.sexualAnalysis,
             responseSuggestions=analysis.responseSuggestions,
             geoContext=analysis.geoContext,
-            analysisEngine=analysis_engine
+            analysisEngine=request.ui_settings.analysis_engine
         )
     except Exception as e:
         logger.error(f"An error occurred during analysis for {request.matchId}: {e}", exc_info=True)

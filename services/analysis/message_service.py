@@ -83,37 +83,45 @@ def _analyze_subtext_enhanced(doc: spacy.tokens.Doc, vader_analyzer) -> SubtextA
 
 def _analyze_question(doc: spacy.tokens.Doc) -> QuestionInfo:
     """
-    Analyzes a spaCy Doc to find and classify questions within the text.
-    It iterates through sentences, identifies questions, counts them, and determines
-    a prioritized type for the entire message.
+    Analyzes a spaCy Doc to find and classify questions, including informal/conversational ones.
     """
     logger.debug(f"Analyzing question for: '{doc.text}'")
     question_count = 0
     question_types = set()
 
-    # Define question words (lemmas) for identifying open-ended questions
     question_words = {"who", "what", "where", "when", "why", "how", "which"}
+    aux_verbs = {"be", "do", "have", "can", "could", "may", "might", "must", "shall", "should", "will", "would"}
 
     for sent in doc.sents:
         sent_text_lower = sent.text.lower().strip()
         is_a_question = False
         sent_type = None
 
-        # 1. Direct question check (ends with '?')
+        # Rule 1: Ends with a question mark (strongest signal)
         if sent_text_lower.endswith('?'):
             is_a_question = True
-
-        # 2. Indirect question check (starts with specific phrases)
-        if any(sent_text_lower.startswith(s) for s in INDIRECT_QUESTION_STARTERS):
+        # Rule 2: Starts with an indirect question starter
+        elif any(sent_text_lower.startswith(s) for s in INDIRECT_QUESTION_STARTERS):
             is_a_question = True
             sent_type = "indirect"
+        # Rule 3: Starts with a question word (e.g., "what time", "so why are you here")
+        elif sent[0].lemma_.lower() in question_words or \
+             (len(sent) > 1 and sent[0].pos_ == 'ADV' and sent[1].lemma_.lower() in question_words):
+            is_a_question = True
+            sent_type = "open"
+        # Rule 4: Starts with an auxiliary verb, indicating inversion (e.g., "are you coming")
+        elif sent[0].lemma_.lower() in aux_verbs and len(sent) > 1 and any(t.dep_ == 'nsubj' for t in sent):
+            is_a_question = True
+            sent_type = "closed"
+        # Rule 5: Handle verbless fragments (e.g., "you good?")
+        elif len(sent) <= 4 and sent[0].pos_ == 'PRON' and sent.root.pos_ == 'ADJ':
+            is_a_question = True
+            sent_type = "closed"
 
-        # If it's a question, determine the type
         if is_a_question:
             question_count += 1
-            # If type isn't already set to indirect, classify as open or closed
+            # If type not set by a specific rule, determine it now
             if not sent_type:
-                # Check for question words to determine if it's open
                 if any(token.lemma_.lower() in question_words for token in sent):
                     sent_type = "open"
                 else:
@@ -137,7 +145,6 @@ def _analyze_question(doc: spacy.tokens.Doc) -> QuestionInfo:
         count=question_count,
         type=final_type
     )
-
     logger.debug(f"Question analysis result: {result.model_dump_json()}")
     return result
 
