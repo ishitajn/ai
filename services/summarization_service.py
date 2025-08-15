@@ -6,6 +6,13 @@ from analysis_models import FullConversationAnalysis
 from api_models import (
     SummarizedAnalysis, ConversationSummary, LastMessageSummary, RecommendedActions, MemorySummary
 )
+from constants import (
+    SEMANTIC_HEATMAP_HOT_THRESHOLD, SEMANTIC_HEATMAP_MEDIUM_THRESHOLD,
+    BASIC_HEATMAP_HOT_THRESHOLD, BASIC_HEATMAP_MEDIUM_THRESHOLD,
+    SEMANTIC_FLIRT_LEVEL_HIGH_THRESHOLD, SEMANTIC_FLIRT_LEVEL_MEDIUM_THRESHOLD,
+    BASIC_FLIRT_LEVEL_HIGH_THRESHOLD, BASIC_FLIRT_LEVEL_MEDIUM_THRESHOLD,
+    SENTIMENT_SCORE_THRESHOLD, AROUSAL_SCORE_THRESHOLD
+)
 
 logger = logging.getLogger(__name__)
 
@@ -58,8 +65,8 @@ def get_semantic_scores(text: str, definitions: Dict[str, List[str]]) -> Dict[st
     return scores
 
 def score_to_heatmap(score: float) -> str:
-    if score > 0.6: return "hot"
-    if score > 0.35: return "medium"
+    if score > SEMANTIC_HEATMAP_HOT_THRESHOLD: return "hot"
+    if score > SEMANTIC_HEATMAP_MEDIUM_THRESHOLD: return "medium"
     return "low"
 
 # --- Main Service Function ---
@@ -83,7 +90,7 @@ def summarize_analysis(
         # ENHANCED: Use SentenceTransformer for semantic analysis
         topic_scores = get_semantic_scores(conversation_text, TOPIC_DEFINITIONS)
         topic_heatmap = {topic: score_to_heatmap(score) for topic, score in topic_scores.items()}
-        liked_topics = [topic for topic, score in topic_scores.items() if score > 0.35]
+        liked_topics = [topic for topic, score in topic_scores.items() if score > SEMANTIC_HEATMAP_MEDIUM_THRESHOLD]
         flirtation_score = topic_scores.get("flirt", 0.0)
         dominant_topic = max(topic_scores, key=topic_scores.get) if topic_scores else "general"
 
@@ -100,9 +107,9 @@ def summarize_analysis(
             topic: sum(1 for keyword in keywords if keyword in conversation_words)
             for topic, keywords in BASIC_TOPIC_KEYWORDS.items()
         }
-        topic_heatmap = {topic: "hot" if score > 2 else "medium" if score > 0 else "low"
+        topic_heatmap = {topic: "hot" if score > BASIC_HEATMAP_HOT_THRESHOLD else "medium" if score > BASIC_HEATMAP_MEDIUM_THRESHOLD else "low"
                          for topic, score in topic_scores.items()}
-        liked_topics = [topic for topic, score in topic_scores.items() if score > 0]
+        liked_topics = [topic for topic, score in topic_scores.items() if score > BASIC_HEATMAP_MEDIUM_THRESHOLD]
         flirtation_score = topic_scores.get("flirt", 0)
         dominant_topic = max(topic_scores, key=topic_scores.get) if any(topic_scores.values()) else "general"
 
@@ -112,12 +119,14 @@ def summarize_analysis(
             last_message_intent = "statement"
 
     # --- Assemble Summary ---
-    flirtation_level = "high" if flirtation_score > (0.5 if use_enhanced_nlp else 2) else \
-                       "medium" if flirtation_score > (0.25 if use_enhanced_nlp else 1) else "low"
+    flirt_high_threshold = SEMANTIC_FLIRT_LEVEL_HIGH_THRESHOLD if use_enhanced_nlp else BASIC_FLIRT_LEVEL_HIGH_THRESHOLD
+    flirt_med_threshold = SEMANTIC_FLIRT_LEVEL_MEDIUM_THRESHOLD if use_enhanced_nlp else BASIC_FLIRT_LEVEL_MEDIUM_THRESHOLD
+    flirtation_level = "high" if flirtation_score > flirt_high_threshold else \
+                       "medium" if flirtation_score > flirt_med_threshold else "low"
 
     conversation_summary = ConversationSummary(
         is_engaged=full_analysis.conversationState == "ACTIVE_CONVO",
-        conversation_stage=full_analysis.memory.dateArcPhase,
+        date_arc_phase=full_analysis.memory.dateArcPhase,
         topic_heatmap=topic_heatmap,
         liked_topics=liked_topics,
         disliked_topics=[],
@@ -127,7 +136,6 @@ def summarize_analysis(
         has_recent_greeting=not full_analysis.suppressGreeting,
         conversationState=full_analysis.conversationState,
         sexualResponseSuggestion=full_analysis.sexualAnalysis.sexualResponseSuggestion,
-        isGeoRelated=last_message_analysis.isGeoRelated if last_message_analysis else False,
     )
 
     memory_summary = MemorySummary(
@@ -138,20 +146,33 @@ def summarize_analysis(
     )
 
     if last_message_analysis:
+        # Determine the topic of the last message specifically
+        if use_enhanced_nlp:
+            last_message_topic_scores = get_semantic_scores(last_message_analysis.content, TOPIC_DEFINITIONS)
+            last_message_topic = max(last_message_topic_scores, key=last_message_topic_scores.get) if last_message_topic_scores else "general"
+        else:
+            last_message_words = set(last_message_analysis.content.lower().split())
+            last_message_topic_scores = {
+                topic: sum(1 for keyword in keywords if keyword in last_message_words)
+                for topic, keywords in BASIC_TOPIC_KEYWORDS.items()
+            }
+            last_message_topic = max(last_message_topic_scores, key=last_message_topic_scores.get) if any(last_message_topic_scores.values()) else "general"
+
         last_message = LastMessageSummary(
             sender=last_message_analysis.role,
             text=last_message_analysis.content,
             intent=last_message_intent,
-            topic=dominant_topic,
-            sentiment="positive" if last_message_analysis.subtext.valence > 0.1 else "negative" if last_message_analysis.subtext.valence < -0.1 else "neutral",
-            emotion="excited" if last_message_analysis.subtext.arousal > 0.1 else "calm",
+            topic=last_message_topic,
+            sentiment="positive" if last_message_analysis.subtext.valence > SENTIMENT_SCORE_THRESHOLD else "negative" if last_message_analysis.subtext.valence < -SENTIMENT_SCORE_THRESHOLD else "neutral",
+            emotion="excited" if last_message_analysis.subtext.arousal > AROUSAL_SCORE_THRESHOLD else "calm",
             explicit="flirting_or_sexual" in last_message_analysis.subtext.intents,
             isQuestion=last_message_analysis.questionInfo.isQuestion,
+            isGeoRelated=last_message_analysis.isGeoRelated,
         )
     else:
         last_message = LastMessageSummary(
             sender="none", text="", intent="none", topic="none",
-            sentiment="none", emotion="none", explicit=False, isQuestion=False
+            sentiment="none", emotion="none", explicit=False, isQuestion=False, isGeoRelated=False
         )
 
     suggestions = full_analysis.responseSuggestions
@@ -179,4 +200,5 @@ def summarize_analysis(
         last_message=last_message,
         recommended_actions=recommended_actions,
         memory_summary=memory_summary,
+        geoContext=full_analysis.geoContext,
     )

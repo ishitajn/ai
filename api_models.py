@@ -93,6 +93,7 @@ class LastMessageSummary(BaseModel):
     emotion: str
     explicit: bool
     isQuestion: bool
+    isGeoRelated: bool
 
 class RecommendedActions(BaseModel):
     focus_topic: str
@@ -118,3 +119,4 @@ class SummarizedAnalysis(BaseModel):
     last_message: LastMessageSummary
     recommended_actions: RecommendedActions
     memory_summary: MemorySummary
+    geoContext: GeoContext
