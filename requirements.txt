@@ -1,7 +1,11 @@
-fastapi
-uvicorn[standard]
-spacy
+# Core NLP and utility libraries
+nltk
+vaderSentiment
 geopy
-httpx
-python-dotenv
 pytz
+scikit-learn
+
+# Transformer models and sentence embeddings
+transformers
+torch
+sentence-transformers
