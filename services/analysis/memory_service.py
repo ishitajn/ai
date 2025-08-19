@@ -6,6 +6,7 @@ from spacy.matcher.dependencymatcher import defaultdict
 from transformers import pipeline, Pipeline
 
 from analysis_models import (MatchMemory, MessageAnalysis, PersonalityProfile, TopicDetails)
+from .utils import get_dominant_topic
 from constants import (
     RED_FLAGS, PLANNING_WORDS, INVESTMENT_QUESTION_BONUS, INVESTMENT_QUESTION_PENALTY,
     INVESTMENT_WORD_COUNT_RATIO, INVESTMENT_WORD_COUNT_BONUS, INVESTMENT_LOW_EFFORT_PENALTY,
@@ -23,7 +24,8 @@ def update_memory_from_history(
         history: List,
         analyzed_messages: List[MessageAnalysis],
         nlp: spacy.language.Language,
-        topic_classifier: Pipeline
+        topic_classifier: Pipeline,
+        use_enhanced_nlp: bool
 ) -> MatchMemory:
     memory = MatchMemory()
     topic_sentiments = defaultdict(list)
@@ -72,7 +74,9 @@ def update_memory_from_history(
 
     for i, msg in enumerate(analyzed_messages):
         if msg.questionInfo.isQuestion:
-            memory.questionHistory.append(msg.content)
+            question_topic = get_dominant_topic(msg.content, use_enhanced_nlp)
+            if question_topic != "general": # Only add if a specific topic is found
+                memory.questionHistory.append(question_topic)
         if msg.role == 'assistant' and msg.subtext.valence > INSIDE_JOKE_VALENCE_THRESHOLD and any(laugh in msg.content.lower() for laugh in ["lmao", "lol", "haha"]):
             if i > 0 and history[i-1].role == 'user':
                 joke_subject = _extract_joke_subject(history[i-1].content, nlp)

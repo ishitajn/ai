@@ -125,6 +125,23 @@ INTENSIFIERS = {"very": 1.5, "so": 1.4, "really": 1.4, "extremely": 1.7, "incred
 NEGATION_WORDS = {"not", "no", "never", "don't", "can't", "won't", "isn't", "aren't", "wasn't", "weren't", "couldn't", "shouldn't", }
 
 # Semantic Intent & Categorization
+TOPIC_DEFINITIONS = {
+    "travel": ["going on a trip", "visiting new places", "exploring the world", "booking a flight"],
+    "food": ["what's your favorite restaurant", "I love cooking", "trying new cuisines", "are you a foodie"],
+    "flirt": ["you have beautiful eyes", "I can't stop thinking about you", "you're really cute", "sending you a kiss"],
+    "sexual": ["I want you so bad", "can't wait to get you in bed", "thinking about your body"],
+    "sports": ["did you watch the game last night", "I love playing soccer", "who's your favorite team"],
+    "career": ["what do you do for work", "I'm a software engineer", "my job is very demanding"],
+}
+
+INTENT_DEFINITIONS = {
+    "question": ["what are you doing?", "how are you?", "can you tell me more?", "are you free?"],
+    "statement": ["that's interesting", "I agree with you", "I went to the store today"],
+    "planning": ["let's meet up tomorrow", "what time works for you?", "are you free on friday?"],
+    "joke": ["that's hilarious", "you're so funny", "I was just kidding"],
+    "opinion": ["I think that's a great idea", "in my opinion, that's not right"],
+}
+
 VULNERABLE_WORDS = ["confess", "to be honest", "tbh", "honestly", "i admit", "i feel", "feeling a bit", "i struggle with", "i'm worried", "nervous", "anxious", "opening up",
                     "it's been tough", "my secret is", "i've never told anyone", "is that weird", "if that makes sense", "i'm confused", "insecure", "my therapist",
                     "my therapy", ]

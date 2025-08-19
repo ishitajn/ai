@@ -70,7 +70,8 @@ def run_full_conversation_analysis(
         history=history,
         analyzed_messages=analyzed_messages,
         nlp=nlp,
-        topic_classifier=topic_classifier
+        topic_classifier=topic_classifier,
+        use_enhanced_nlp=ui_settings.useEnhancedNlp
     )
 
     geo_context = geo_service.get_geo_context(
