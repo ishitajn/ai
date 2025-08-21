@@ -1,45 +1,78 @@
 from datetime import datetime
 import pytz
-from app.schemas import UISettings, Location, GeoTimeInfo
+from app.schemas import UISettings, Location, Geo, GeoLocationDetails
 from typing import Optional
 
-def get_time_of_day(timezone_str: str) -> str:
-    """Calculates the time of day for a given timezone."""
+def _get_location_details(location: Location, timezone_str: str) -> GeoLocationDetails:
+    """Helper to create GeoLocationDetails for a user or match."""
     try:
-        user_timezone = pytz.timezone(timezone_str)
+        timezone = pytz.timezone(timezone_str)
     except pytz.UnknownTimeZoneError:
-        user_timezone = pytz.utc  # Default to UTC if timezone is invalid
+        # Default to UTC if the provided timezone string is invalid
+        timezone = pytz.utc
 
-    now = datetime.now(user_timezone)
+    now = datetime.now(timezone)
+
     hour = now.hour
-
     if 5 <= hour < 12:
-        return "morning"
+        time_of_day = "Morning"
     elif 12 <= hour < 17:
-        return "afternoon"
+        time_of_day = "Afternoon"
     elif 17 <= hour < 21:
-        return "evening"
+        time_of_day = "Evening"
     else:
-        return "night"
+        time_of_day = "Night"
 
-def compute(ui_settings: UISettings, user_location: Location, match_location: Optional[Location] = None) -> GeoTimeInfo:
+    return GeoLocationDetails(
+        city=location.city,
+        country=location.country,
+        timeOfDay=time_of_day,
+        current_date_time=now.isoformat()
+    )
+
+def compute(
+    user_settings: UISettings,
+    user_location: Location,
+    # Match data is optional as it may not be available in the payload
+    match_settings: Optional[UISettings] = None,
+    match_location: Optional[Location] = None
+) -> Geo:
     """
-    Calculates time of day, virtual/physical setting, and country difference.
-
-    The `match_location` is optional as it might not always be available.
+    Calculates the new, detailed Geo object, including user/match locations,
+    time of day, and differences between them.
     """
-    time_of_day = get_time_of_day(ui_settings.time_zone)
+    user_geo_details = _get_location_details(user_location, user_settings.time_zone)
 
-    # In a real system, this might be inferred from conversation context.
-    # Hardcoded to True (virtual) for this implementation.
-    is_virtual = True
+    # Handle optional match data gracefully
+    if match_location and match_settings:
+        match_geo_details = _get_location_details(match_location, match_settings.time_zone)
+        country_diff = user_location.country.lower() != match_location.country.lower()
 
-    country_diff = False
-    if match_location and user_location.country.lower() != match_location.country.lower():
-        country_diff = True
+        # Calculate timezone difference in hours
+        user_tz = pytz.timezone(user_settings.time_zone)
+        match_tz = pytz.timezone(match_settings.time_zone)
+        now_utc = datetime.now(pytz.utc)
+        user_offset = user_tz.utcoffset(now_utc)
+        match_offset = match_tz.utcoffset(now_utc)
+        tz_diff_hours = int((user_offset - match_offset).total_seconds() / 3600)
 
-    return GeoTimeInfo(
-        time_of_day=time_of_day,
-        is_virtual=is_virtual,
-        country_difference=country_diff
+        # The conversation is virtual if there is any geo-spatial difference
+        is_virtual = bool(country_diff or (tz_diff_hours != 0))
+
+    else:
+        # If no match data, assume same location and no difference
+        match_geo_details = GeoLocationDetails(
+            city=user_location.city,
+            country=user_location.country
+        )
+        country_diff = False
+        tz_diff_hours = 0
+        is_virtual = False
+
+    return Geo(
+        userLocation=user_geo_details,
+        matchLocation=match_geo_details,
+        isVirtual=is_virtual,
+        timeZoneDifference=tz_diff_hours,
+        countryDifference=country_diff
     )

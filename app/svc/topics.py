@@ -13,11 +13,16 @@ STOP_WORDS = {
     'will', 'can', 'should', 'would', 'could', 'not', 'no', 'very', 'just', 'like', 'u'
 }
 
-def _get_cluster_label(messages: List[str]) -> Tuple[str, List[str]]:
-    """Generates a label and keywords for a cluster of messages."""
-    if not messages:
-        return "Unknown Topic", []
+# Keywords for categorization
+SEXUAL_KEYWORDS = {"sex", "fuck", "kink", "fetish", "bdsm", "porn", "horny"}
+SENSITIVE_KEYWORDS = {"politics", "religion", "money", "finance", "ex", "grief", "death"}
 
+def _get_topic_details(messages: List[str], all_turns: List[Message]) -> Tuple[str, List[str], str]:
+    """Generates a label, keywords, and a category for a cluster of messages."""
+    if not messages:
+        return "Unknown", [], "neutral"
+
+    # 1. Extract keywords from the messages in the cluster
     word_counts = Counter()
     for msg in messages:
         words = msg.lower().split()
@@ -27,46 +32,61 @@ def _get_cluster_label(messages: List[str]) -> Tuple[str, List[str]]:
                 word_counts[cleaned_word] += 1
 
     if not word_counts:
-        return "General Chat", []
+        return "General Chat", [], "neutral"
 
     keywords = [word for word, count in word_counts.most_common(3)]
-    label = keywords[0] if keywords else "General Chat"
+    label = keywords[0].capitalize() if keywords else "General Chat"
 
-    return label.capitalize(), keywords
+    # 2. Categorize the topic based on keywords and context
+    category = "neutral"
+    lower_keywords = {k.lower() for k in keywords}
 
+    if any(k in SEXUAL_KEYWORDS for k in lower_keywords):
+        category = "sexual"
+    elif any(k in SENSITIVE_KEYWORDS for k in lower_keywords):
+        category = "sensitive"
+
+    # Check if this topic is a "focus" topic (related to a recent question from the user)
+    if len(all_turns) > 0:
+        last_turn = all_turns[-1]
+        if last_turn.role == 'user' and '?' in last_turn.text:
+            if any(k in last_turn.text.lower() for k in lower_keywords):
+                category = "focus"
+
+    return label, keywords, category
 
 def assign(turns: List[Message], vecs: np.ndarray) -> List[Topic]:
     """
-    Assigns topics to the conversation turns using embedding clustering.
+    Assigns categorized topics to the conversation turns using embedding clustering.
     """
     if vecs.shape[0] < 3:
-        return [Topic(label="Opening Chat", keywords=["greeting"])]
+        return [Topic(label="Opening Chat", keywords=["greeting"], category="neutral")]
 
-    # Determine the number of clusters (topics)
     n_clusters = max(2, min(len(turns) // 3, 5))
 
     kmeans = KMeans(n_clusters=n_clusters, random_state=42, n_init='auto')
     try:
-        # Ensure vectors are float32 for KMeans
         vecs_float32 = vecs.astype(np.float32)
         kmeans.fit(vecs_float32)
     except Exception as e:
         print(f"Error during clustering: {e}")
-        return [Topic(label="General Discussion", keywords=[])]
+        return [Topic(label="General Discussion", keywords=[], category="neutral")]
 
     labels = kmeans.labels_
 
+    # Group messages by cluster
     clusters: List[List[str]] = [[] for _ in range(n_clusters)]
     for i, turn in enumerate(turns):
         clusters[labels[i]].append(turn.text)
 
+    # Create categorized Topic objects
     topics: List[Topic] = []
     unique_labels = set()
     for i in range(n_clusters):
         if clusters[i]:
-            label, keywords = _get_cluster_label(clusters[i])
+            label, keywords, category = _get_topic_details(clusters[i], turns)
             if label not in unique_labels:
-                topics.append(Topic(label=label, keywords=keywords))
+                topics.append(Topic(label=label, keywords=keywords, category=category))
                 unique_labels.add(label)
 
     return topics

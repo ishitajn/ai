@@ -1,44 +1,42 @@
-from app.schemas import ContextPack, Suggestions, Topic
+from app.schemas import Suggestions, FeatureProbes, Topic, Geo
+from typing import List
 import random
 
-def suggest(context: ContextPack) -> Suggestions:
+def suggest(features: FeatureProbes, topics: List[Topic], geo: Geo) -> Suggestions:
     """
-    Generates context-aware suggestions.
-    This is a mock implementation of the Tiny LLM's role, using rule-based logic.
+    Generates context-aware suggestions based on the new, simpler schema.
+    This is a mock implementation of the Tiny LLM's role.
+    The `ContextPack` has been removed for a simpler function signature.
     """
     suggestions = Suggestions()
-    features = context.features
-    topics = context.topics
 
-    # --- Rule-based suggestion generation based on context ---
+    # 1. Address direct questions from the match
+    if features.match_contains_question:
+        suggestions.topics.append("They just asked a question, it would be good to answer it.")
 
-    # 1. Address direct questions first
-    if features.questions:
-        suggestions.talking_points.append("They just asked a question. It's a good idea to answer it directly.")
+    # 2. Generate topic-based suggestions from focused topics
+    focus_topics = [t for t in topics if t.category == 'focus']
+    if focus_topics:
+        chosen_topic = random.choice(focus_topics)
+        suggestions.topics.append(f"You were just talking about {chosen_topic.label.lower()}. Maybe ask what they think about it?")
+        if chosen_topic.keywords:
+            suggestions.questions.append(f"What's your favorite thing about {chosen_topic.keywords[0]}?")
 
-    # 2. Generate topic-based talking points
-    if topics:
-        chosen_topic = random.choice(topics)
-        if chosen_topic.label != "General Chat":
-            suggestions.talking_points.append(f"You were talking about {chosen_topic.label.lower()}. You could share your thoughts on it.")
-            if chosen_topic.keywords:
-                suggestions.questions.append(f"What's your take on {chosen_topic.keywords[0]}?")
-
-    # 3. Handle Flirtation, Sexual, and Intimacy suggestions
-    # Escalation readiness is not yet computed, so we use reciprocity and energy as proxies.
+    # 3. Handle Flirtation and Intimacy
     if features.flirtation_detected and features.reciprocity:
-        suggestions.sexual_suggestions.append("The energy is getting flirty! Try giving a specific, genuine compliment.")
-        suggestions.next_action_plans.append("Maybe it's time to suggest moving the conversation to a more private chat or a call.")
+        suggestions.sexual.append("The energy is getting flirty! Try giving a compliment about their personality or humor.")
     elif features.playful_energy:
-        suggestions.talking_points.append("The vibe is playful. Share a funny story or ask about a light-hearted topic.")
+        suggestions.topics.append("The vibe is playful. Share a funny story or a meme.")
 
-    # 4. Context-aware intimacy suggestions based on time
-    if context.geo.time_of_day in ["evening", "night"] and features.disclosure:
-        suggestions.intimacy_suggestions.append("It's getting late and you're both opening up. Ask about their evening routine or a favorite late-night snack.")
+    # 4. Late-night context from the new Geo object
+    if geo.userLocation.timeOfDay in ["Evening", "Night"] and features.disclosure:
+        suggestions.intimacy.append("It's getting late and you're both opening up. Maybe ask about their evening routine or a favorite late-night snack.")
 
     # 5. Default suggestion if no other context fits
-    if not suggestions.talking_points and not suggestions.questions:
-        suggestions.questions.append("Ask them about something they're passionate about.")
-        suggestions.questions.append("What's the best part of their week been so far?")
+    if not suggestions.topics and not suggestions.questions:
+        suggestions.questions.append("Ask them about something they are passionate about.")
+        neutral_topics = [t for t in topics if t.category == 'neutral' and t.label != "General Chat"]
+        if neutral_topics:
+            suggestions.topics.append(f"You could pivot back to talking about {random.choice(neutral_topics).label.lower()}.")
 
     return suggestions

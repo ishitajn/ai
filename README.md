@@ -48,6 +48,18 @@ app/
     ```
     This will run the pipeline with a sample conversation payload and print the resulting analysis and suggestions as a JSON object to the console.
 
+## Output Schema
+
+The pipeline produces a detailed JSON object that provides a holistic view of the conversation. The main keys are:
+
+-   **`matchId`**: The unique identifier for the conversation.
+-   **`conversation_state`**: Contains categorized topics (`focus`, `avoid`, `sensitive`, `sexual`, etc.) and a list of recent topics.
+-   **`geo`**: Provides detailed geo-spatial and temporal information for both the user and the match, including local time of day, timezone differences, and whether the interaction is virtual.
+-   **`suggestions`**: Offers context-aware recommendations, including topics to discuss, questions to ask, and suggestions for building sexual or emotional intimacy.
+-   **`analysis`**: A comprehensive analysis of the conversation's dynamics, including the match's engagement level, comfort level, flirtation level, and other stylistic metrics.
+-   **`sentiment`**: A high-level sentiment analysis of the conversation.
+-   **`pipeline`**: The name and version of the analysis pipeline used.
+
 ## Pipeline Overview
 
 The system processes data in the following sequence:
