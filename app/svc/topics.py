@@ -3,6 +3,7 @@ import numpy as np
 from sklearn.cluster import KMeans
 from typing import List, Tuple
 from app.schemas import Message, Topic
+import asyncio
 
 # Basic stop words list, expanded for chat context
 STOP_WORDS = {
@@ -55,16 +56,20 @@ def _get_topic_details(messages: List[str], all_turns: List[Message]) -> Tuple[s
 
     return label, keywords, category
 
-def assign(turns: List[Message], vecs: np.ndarray) -> List[Topic]:
+async def assign(turns: List[Message], vecs: np.ndarray) -> List[Topic]:
     """
     Assigns categorized topics to the conversation turns using embedding clustering.
+    Made async to run concurrently.
     """
+    await asyncio.sleep(0)
+
     if vecs.shape[0] < 3:
         return [Topic(label="Opening Chat", keywords=["greeting"], category="neutral")]
 
     n_clusters = max(2, min(len(turns) // 3, 5))
 
-    kmeans = KMeans(n_clusters=n_clusters, random_state=42, n_init='auto')
+    # n_init=1 is used for performance, as we don't need perfect clusters for this mock.
+    kmeans = KMeans(n_clusters=n_clusters, random_state=42, n_init=1)
     try:
         vecs_float32 = vecs.astype(np.float32)
         kmeans.fit(vecs_float32)

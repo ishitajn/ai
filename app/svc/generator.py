@@ -1,13 +1,15 @@
 from app.schemas import Suggestions, FeatureProbes, Topic, Geo
 from typing import List
 import random
+import asyncio
 
-def suggest(features: FeatureProbes, topics: List[Topic], geo: Geo) -> Suggestions:
+async def suggest(features: FeatureProbes, topics: List[Topic], geo: Geo) -> Suggestions:
     """
-    Generates context-aware suggestions based on the new, simpler schema.
-    This is a mock implementation of the Tiny LLM's role.
-    The `ContextPack` has been removed for a simpler function signature.
+    Generates context-aware suggestions. Mocking a non-blocking LLM call.
     """
+    # Simulate a non-blocking I/O call (e.g., to a remote LLM)
+    await asyncio.sleep(0.02)
+
     suggestions = Suggestions()
 
     # 1. Address direct questions from the match

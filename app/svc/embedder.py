@@ -1,14 +1,18 @@
 from typing import List, Dict
 import numpy as np
+import asyncio
 
 # In-memory cache for embeddings
 embedding_cache: Dict[str, np.ndarray] = {}
 
-def encode_cached(texts: List[str]) -> np.ndarray:
+async def encode_cached(texts: List[str]) -> np.ndarray:
     """
     Generates int8 embeddings for a list of texts, using a cache.
-    This is a mock implementation that simulates embedding generation.
+    This is a mock implementation that simulates a non-blocking operation.
     """
+    # Simulate yielding control to the event loop, as a real ML model might.
+    await asyncio.sleep(0.01)
+
     embeddings = []
     max_len = 0
 

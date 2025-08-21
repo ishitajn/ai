@@ -2,6 +2,7 @@ from datetime import datetime
 import pytz
 from app.schemas import UISettings, Location, Geo, GeoLocationDetails
 from typing import Optional
+import asyncio
 
 def _get_location_details(location: Location, timezone_str: str) -> GeoLocationDetails:
     """Helper to create GeoLocationDetails for a user or match."""
@@ -30,7 +31,7 @@ def _get_location_details(location: Location, timezone_str: str) -> GeoLocationD
         current_date_time=now.isoformat()
     )
 
-def compute(
+async def compute(
     user_settings: UISettings,
     user_location: Location,
     # Match data is optional as it may not be available in the payload
@@ -38,9 +39,11 @@ def compute(
     match_location: Optional[Location] = None
 ) -> Geo:
     """
-    Calculates the new, detailed Geo object, including user/match locations,
-    time of day, and differences between them.
+    Calculates the new, detailed Geo object. Made async to run concurrently.
     """
+    # This is a fast, CPU-bound task, but we make it awaitable.
+    await asyncio.sleep(0)
+
     user_geo_details = _get_location_details(user_location, user_settings.time_zone)
 
     # Handle optional match data gracefully

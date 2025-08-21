@@ -1,3 +1,8 @@
+import asyncio
+import dataclasses
+import json
+import numpy as np
+
 from app.schemas import (
     Payload, UserProfile, MatchProfile, Location, Message, UISettings,
     UnifiedJSONOutput
@@ -5,9 +10,6 @@ from app.schemas import (
 from app.svc import (
     normalizer, embedder, index, probes, topics, planner, generator, reranker, assembler
 )
-import dataclasses
-import json
-import numpy as np
 
 # A simple monkey-patch to make numpy arrays serializable by default
 original_default = json.JSONEncoder.default
@@ -18,38 +20,39 @@ def new_default(self, obj):
 json.JSONEncoder.default = new_default
 
 
-def analyze_conversation(payload: Payload) -> UnifiedJSONOutput:
+async def analyze_conversation(payload: Payload) -> UnifiedJSONOutput:
     """
-    The main pipeline, updated to work with the refactored services and new data schemas.
+    The main pipeline, refactored to be asynchronous for improved performance.
     """
-    # 1. Normalize and clean text
+    # 1. Normalize (sync)
     norm_data = normalizer.clean(payload)
     turns = norm_data.turns
-
-    # 2. Generate embeddings for the cleaned text
     texts_to_embed = [t.text for t in turns]
-    vecs = embedder.encode_cached(texts_to_embed)
 
-    # 3. Add new embeddings to the semantic index
+    # 2. Concurrently run independent async tasks
+    # We can start planning (geo) and embedding at the same time.
+    geo_task = planner.compute(payload.ui_settings, payload.location, None, None)
+    vecs = await embedder.encode_cached(texts_to_embed)
+
+    # 3. Indexing (sync, stateful)
     if vecs.size > 0:
         index.ensure_added(turns, vecs)
 
-    # 4. Evaluate features and probes from the conversation
-    features = probes.evaluate(turns, vecs)
+    # 4. Concurrently run async tasks that depend on the embeddings
+    # Probes and topics can be calculated at the same time.
+    probes_task = probes.evaluate(turns, vecs)
+    topics_task = topics.assign(turns, vecs)
 
-    # 5. Discover and categorize topics via clustering
-    topics_list = topics.assign(turns, vecs)
+    # Await all concurrent tasks to get their results
+    geo_info, features, topics_list = await asyncio.gather(geo_task, probes_task, topics_task)
 
-    # 6. Perform Geo/Time planning (passing None for match data as it's not in payload)
-    geo_info = planner.compute(payload.ui_settings, payload.location, None, None)
+    # 7. Generate Suggestions (async)
+    raw_suggestions = await generator.suggest(features, topics_list, geo_info)
 
-    # 7. Generate raw suggestions (ContextPack is removed for a direct call)
-    raw_suggestions = generator.suggest(features, topics_list, geo_info)
-
-    # 8. Rerank and enforce constraints on suggestions
+    # 8. Rerank (sync)
     final_suggestions = reranker.enforce_constraints(raw_suggestions)
 
-    # 9. Assemble the final, unified output object
+    # 9. Assemble (sync)
     final_output = assembler.build(
         payload=payload,
         topics=topics_list,
@@ -61,10 +64,9 @@ def analyze_conversation(payload: Payload) -> UnifiedJSONOutput:
     return final_output
 
 if __name__ == '__main__':
-    # A more complex sample payload to test the new features
     sample_payload = Payload(
         user_profile=UserProfile(user_id="u1", name="Alex"),
-        match_profile=MatchProfile(match_id="m1_refactored", name="Sam"),
+        match_profile=MatchProfile(match_id="m1_perf_test", name="Sam"),
         location=Location(city="New York", country="USA"),
         ui_settings=UISettings(
             enhanced_nlp=True,
@@ -80,11 +82,10 @@ if __name__ == '__main__':
         ]
     )
 
-    # Run the full analysis pipeline
-    result = analyze_conversation(sample_payload)
+    # Run the async pipeline
+    result = asyncio.run(analyze_conversation(sample_payload))
 
-    # Convert the final dataclass to a dictionary for clean JSON printing
     result_dict = dataclasses.asdict(result)
 
-    print("--- Unified JSON Output (Refactored) ---")
+    print("--- Unified JSON Output (Async Pipeline) ---")
     print(json.dumps(result_dict, indent=2))
